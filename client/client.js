@@ -5,6 +5,22 @@
 // const WS_URL = 'wss://bomb-coop-server.onrender.com';
 const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
 
+const EXPLOSION_SVG = `<svg width="140" height="140" viewBox="0 0 200 200">
+  <polygon points="100,10 118,70 175,50 130,95 190,110 128,118 145,175 100,135 55,175 72,118 10,110 70,95 25,50 82,70" fill="#ff5a5f"/>
+  <polygon points="100,35 112,78 152,64 122,95 165,106 120,112 132,150 100,124 68,150 80,112 35,106 78,95 48,64 88,78" fill="#ffd166"/>
+  <circle cx="100" cy="100" r="26" fill="#fff4d6"/>
+</svg>`;
+
+const SUCCESS_SVG = `<svg width="140" height="140" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="80" fill="#06d6a0" opacity="0.18"/>
+  <circle cx="100" cy="100" r="60" fill="#06d6a0"/>
+  <path d="M70 102 L92 124 L134 78" stroke="#083" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="40" cy="50" r="6" fill="#ffd166"/>
+  <circle cx="165" cy="60" r="8" fill="#4d96ff"/>
+  <circle cx="35" cy="150" r="7" fill="#ff6b6b"/>
+  <circle cx="170" cy="145" r="5" fill="#ffd166"/>
+</svg>`;
+
 let ws = null;
 let myRole = null;
 let roomCode = null;
@@ -65,6 +81,7 @@ function handleServerMessage(msg) {
       document.getElementById('room-code-display').textContent = roomCode;
       document.getElementById('role-display').textContent =
         myRole === 'A' ? 'Player A (Bomb Handler)' : 'Player B (Expert)';
+      document.getElementById('role-icon').textContent = myRole === 'A' ? '💣' : '📖';
       showScreen('waiting');
       break;
 
@@ -94,7 +111,7 @@ function handleServerMessage(msg) {
       break;
 
     case 'strike':
-      document.getElementById('strike-count').textContent = msg.strikes;
+      updateStrikeDots(msg.strikes);
       break;
 
     case 'module_result':
@@ -116,13 +133,16 @@ function handleServerMessage(msg) {
       showScreen('end');
       const title = document.getElementById('end-title');
       const detail = document.getElementById('end-detail');
+      const icon = document.getElementById('end-icon');
       if (msg.status === 'defused') {
-        title.textContent = '💣 BOMB DEFUSED!';
-        title.style.color = '#2ecc71';
+        icon.innerHTML = SUCCESS_SVG;
+        title.textContent = 'BOMB DEFUSED!';
+        title.style.color = '#06d6a0';
         detail.textContent = `เหลือเวลา ${formatTime(msg.timeRemaining)}`;
       } else {
-        title.textContent = '💥 BOOM! GAME OVER';
-        title.style.color = '#e63946';
+        icon.innerHTML = EXPLOSION_SVG;
+        title.textContent = 'BOOM! GAME OVER';
+        title.style.color = '#ff5a5f';
         detail.textContent =
           msg.reason === 'timeout' ? 'หมดเวลา' : msg.reason === 'max_strikes' ? 'พลาดครบ 3 ครั้ง' : 'เกมจบกะทันหัน';
       }
@@ -131,6 +151,11 @@ function handleServerMessage(msg) {
     default:
       break;
   }
+}
+
+function updateStrikeDots(strikes) {
+  const dots = document.querySelectorAll('.strike-dot');
+  dots.forEach((dot, i) => dot.classList.toggle('lit', i < strikes));
 }
 
 function updateTimerDisplay(seconds) {
