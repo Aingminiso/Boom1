@@ -149,6 +149,14 @@ function evaluateAction(mod, action) {
     }
     return false;
   }
+  if (mod.type === 'switch' && action.type === 'confirm_switches') {
+    const expected = mod._answer.positions;
+    if (!Array.isArray(action.positions) || action.positions.length !== expected.length) return false;
+    return expected.every((pos, i) => action.positions[i] === pos);
+  }
+  if (mod.type === 'code' && action.type === 'submit_code') {
+    return typeof action.code === 'string' && action.code === mod._answer.code;
+  }
   return false;
 }
 

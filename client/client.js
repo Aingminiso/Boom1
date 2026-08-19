@@ -97,9 +97,12 @@ function handleServerMessage(msg) {
 
     case 'game_start':
       showScreen('game');
+      document.getElementById('hud-role-label').textContent =
+        myRole === 'A' ? 'BOMB HANDLER (PLAYER A)' : 'EXPERT (PLAYER B)';
       document.getElementById('player-a-view').classList.toggle('active', myRole === 'A');
       document.getElementById('player-b-view').classList.toggle('active', myRole === 'B');
       if (myRole === 'A') {
+        document.getElementById('serial-number').textContent = `A${roomCode}`;
         modulesState = {};
         msg.modules.forEach((m) => (modulesState[m.id] = m));
         renderModules();
@@ -120,6 +123,9 @@ function handleServerMessage(msg) {
           modulesState[msg.moduleId].solved = true;
           renderModules();
         } else {
+          const mod = modulesState[msg.moduleId];
+          if (mod && mod.type === 'code') mod._input = '';
+          renderModules();
           flashWrong(msg.moduleId);
         }
       }
@@ -175,12 +181,14 @@ function renderModules() {
     box.className = 'module-box' + (mod.solved ? ' solved' : '');
 
     if (mod.type === 'wire') {
-      box.innerHTML = `<h3>🔌 Wire Module ${mod.solved ? '✅' : ''}</h3><div class="wire-list"></div>`;
+      box.innerHTML = `
+        <div class="module-header"><span class="rivet"></span><h3>Wire Module</h3><span class="rivet"></span></div>
+        <div class="module-body"><div class="wire-list"></div></div>`;
       const list = box.querySelector('.wire-list');
       mod.visibleState.wires.forEach((color, index) => {
         const wireEl = document.createElement('div');
         wireEl.className = `wire wire-${color}`;
-        wireEl.textContent = `สาย ${index + 1} (${color})`;
+        wireEl.title = `สาย ${index + 1} (${color})`;
         if (!mod.solved) {
           wireEl.onclick = () => sendModuleAction(mod.id, { type: 'cut_wire', index });
         } else {
@@ -191,10 +199,13 @@ function renderModules() {
     }
 
     if (mod.type === 'button') {
-      box.innerHTML = `<h3>🔘 Button Module ${mod.solved ? '✅' : ''}</h3>`;
+      box.innerHTML = `
+        <div class="module-header"><span class="rivet"></span><h3>Button Module</h3><span class="rivet"></span></div>
+        <div class="module-body"></div>`;
+      const body = box.querySelector('.module-body');
       const btn = document.createElement('button');
       btn.className = `big-button btn-${mod.visibleState.color}`;
-      btn.textContent = `${mod.visibleState.label}`;
+      btn.textContent = mod.visibleState.label;
       if (!mod.solved) {
         btn.onpointerdown = () => {
           holdStart = Date.now();
@@ -218,7 +229,87 @@ function renderModules() {
       } else {
         btn.disabled = true;
       }
-      box.appendChild(btn);
+      body.appendChild(btn);
+    }
+
+    if (mod.type === 'switch') {
+      box.innerHTML = `
+        <div class="module-header"><span class="rivet"></span><h3>Switch Module</h3><span class="rivet"></span></div>
+        <div class="module-body"><div class="switch-row"></div></div>`;
+      const row = box.querySelector('.switch-row');
+      // เก็บ state ตำแหน่งปัจจุบันไว้ที่ moduleState เอง (client-local จนกว่าจะกดยืนยัน)
+      if (!mod._positions) {
+        mod._positions = mod.visibleState.switches.map((s) => s.initialPosition);
+      }
+      mod.visibleState.switches.forEach((sw, index) => {
+        const unit = document.createElement('div');
+        unit.className = 'switch-unit';
+        const led = document.createElement('span');
+        led.className = `switch-led led-${sw.color}` + (sw.ledOn ? ' lit' : '');
+        const lever = document.createElement('div');
+        lever.className = `switch-lever switch-${sw.color} pos-${mod._positions[index]}`;
+        lever.textContent = mod._positions[index] === 'up' ? '▲' : '▼';
+        if (!mod.solved) {
+          lever.onclick = () => {
+            mod._positions[index] = mod._positions[index] === 'up' ? 'down' : 'up';
+            renderModules();
+          };
+        }
+        unit.appendChild(led);
+        unit.appendChild(lever);
+        row.appendChild(unit);
+      });
+      if (!mod.solved) {
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = 'switch-confirm';
+        confirmBtn.textContent = 'ยืนยันตำแหน่ง';
+        confirmBtn.onclick = () => sendModuleAction(mod.id, { type: 'confirm_switches', positions: mod._positions });
+        box.querySelector('.module-body').appendChild(confirmBtn);
+      }
+    }
+
+    if (mod.type === 'code') {
+      box.innerHTML = `
+        <div class="module-header"><span class="rivet"></span><h3>Code Module</h3><span class="rivet"></span></div>
+        <div class="module-body"></div>`;
+      const body = box.querySelector('.module-body');
+      if (!mod._input) mod._input = '';
+      const display = document.createElement('div');
+      display.className = `code-screen code-screen-${mod.visibleState.color}`;
+      display.innerHTML = `<span class="code-seed">SEED: ${mod.visibleState.seed}</span>
+        <span class="code-input">${mod._input.padEnd(4, '_')}</span>`;
+      body.appendChild(display);
+
+      if (!mod.solved) {
+        const pad = document.createElement('div');
+        pad.className = 'keypad';
+        '0123456789'.split('').forEach((d) => {
+          const key = document.createElement('button');
+          key.className = 'keypad-btn';
+          key.textContent = d;
+          key.onclick = () => {
+            if (mod._input.length < 4) mod._input += d;
+            renderModules();
+          };
+          pad.appendChild(key);
+        });
+        const clearKey = document.createElement('button');
+        clearKey.className = 'keypad-btn keypad-clear';
+        clearKey.textContent = 'CLEAR';
+        clearKey.onclick = () => {
+          mod._input = '';
+          renderModules();
+        };
+        const enterKey = document.createElement('button');
+        enterKey.className = 'keypad-btn keypad-enter';
+        enterKey.textContent = 'ENTER';
+        enterKey.onclick = () => {
+          if (mod._input.length === 4) sendModuleAction(mod.id, { type: 'submit_code', code: mod._input });
+        };
+        pad.appendChild(clearKey);
+        pad.appendChild(enterKey);
+        body.appendChild(pad);
+      }
     }
 
     container.appendChild(box);
@@ -232,9 +323,10 @@ function sendModuleAction(moduleId, action) {
 function flashWrong(moduleId) {
   const boxes = document.querySelectorAll('.module-box');
   boxes.forEach((b) => {
-    if (b.querySelector('h3')?.textContent.toLowerCase().includes(moduleId)) {
-      b.style.background = '#5c1a1a';
-      setTimeout(() => (b.style.background = ''), 300);
+    const label = b.querySelector('h3')?.textContent.toLowerCase() || '';
+    if (label.includes(moduleId)) {
+      b.style.boxShadow = '0 0 0 2px #ff5a5f';
+      setTimeout(() => (b.style.boxShadow = ''), 300);
     }
   });
 }

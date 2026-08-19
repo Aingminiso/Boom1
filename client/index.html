@@ -54,8 +54,14 @@
 
 <div id="screen-game" class="screen">
   <div id="hud">
-    <div id="timer">05:00</div>
-    <div id="strikes">
+    <div class="hud-left">
+      <div id="hud-role-label" class="hud-role-label"></div>
+      <div class="timer-plate">
+        <span class="timer-caption">TIME REMAINING</span>
+        <span id="timer">05:00</span>
+      </div>
+    </div>
+    <div class="hud-right">
       <span class="strike-label">STRIKES</span>
       <span id="strike-dots" class="strike-dots">
         <span class="strike-dot"></span><span class="strike-dot"></span><span class="strike-dot"></span>
@@ -64,12 +70,18 @@
   </div>
 
   <div id="player-a-view" class="player-view">
-    <h2>💣 ระเบิด (Bomb Handler)</h2>
-    <div class="bomb-casing">
-      <div class="bomb-casing-top">
-        <span class="bolt"></span><span class="bolt"></span><span class="bolt"></span><span class="bolt"></span>
-      </div>
+    <div class="bomb-panel">
+      <span class="rivet rv-tl"></span><span class="rivet rv-tr"></span>
+      <span class="rivet rv-bl"></span><span class="rivet rv-br"></span>
       <div id="modules-container"></div>
+      <div class="panel-footer">
+        <div class="serial-plate">
+          <span class="serial-label">SERIAL NO.</span>
+          <span class="serial-barcode"></span>
+          <span id="serial-number" class="serial-number"></span>
+        </div>
+        <div class="sticky-note">Stay Calm.<br />Trust your Expert.</div>
+      </div>
     </div>
   </div>
 
@@ -96,6 +108,29 @@
             <li>ปุ่ม <b>สีน้ำเงิน</b> (ข้อความอะไรก็ได้) → กดครั้งเดียวแล้วปล่อยทันที</li>
             <li>นอกเหนือจากนี้ → กดค้างไว้อย่างน้อย <b>3 วินาที</b> แล้วค่อยปล่อย</li>
           </ul>
+        </section>
+        <section class="manual-page manual-switch">
+          <h3>🔀 Switch Module</h3>
+          <p>ถามสี + LED ติดหรือดับ ของแต่ละสวิตช์ แล้วบอกตำแหน่งที่ถูกต้องตามตาราง (ต้องตั้งให้ถูก<b>ทุกตัวพร้อมกัน</b>ก่อนกดยืนยัน):</p>
+          <table class="manual-table">
+            <tr><th>สี</th><th>LED ติด</th><th>LED ดับ</th></tr>
+            <tr><td>🔴 แดง</td><td>ขึ้น (Up)</td><td>ลง (Down)</td></tr>
+            <tr><td>🔵 น้ำเงิน</td><td>ลง (Down)</td><td>ขึ้น (Up)</td></tr>
+            <tr><td>🟡 เหลือง</td><td>ขึ้น (Up)</td><td>ลง (Down)</td></tr>
+          </table>
+        </section>
+        <section class="manual-page manual-code">
+          <h3>🔢 Code Module</h3>
+          <p>ถามเลข <b>SEED</b> (2 หลัก) กับสีจอ แล้วคำนวณรหัส 4 หลัก:</p>
+          <p class="manual-formula">รหัส = (SEED × ตัวคูณ) mod 10000 — เติม 0 ข้างหน้าให้ครบ 4 หลัก</p>
+          <table class="manual-table">
+            <tr><th>สีจอ</th><th>ตัวคูณ</th></tr>
+            <tr><td>🔴 แดง</td><td>13</td></tr>
+            <tr><td>🔵 น้ำเงิน</td><td>7</td></tr>
+            <tr><td>🟡 เหลือง</td><td>21</td></tr>
+            <tr><td>⚪ ขาว</td><td>3</td></tr>
+          </table>
+          <p class="manual-hint" style="margin-top:8px;">เช่น SEED 47 สีน้ำเงิน → 47×7 = 329 → รหัสคือ <b>0329</b></p>
         </section>
         <p class="manual-hint">💬 ให้ Player A อธิบายสี/ข้อความที่เห็นทางเสียง (นอกเกม) แล้วดูกฎด้านบนเพื่อบอกวิธีแก้</p>
       </div>

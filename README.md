@@ -1,4 +1,4 @@
-# 💣 BOMB CO-OP — Prototype v0.1
+# 💣 BOMB CO-OP — Prototype v0.2
 
 โครงสร้างโปรเจกต์:
 
@@ -7,7 +7,7 @@ bomb-coop/
 ├── server/
 │   ├── server.js          # WebSocket server + serve client static files
 │   ├── gameState.js       # Room / Timer / Strike / broadcast logic
-│   ├── bombGenerator.js   # สุ่ม Bomb (Wire + Button module สำหรับ v0.1)
+│   ├── bombGenerator.js   # สุ่ม Bomb (Wire, Button, Switch, Code module — v0.2)
 │   └── package.json
 └── client/
     ├── index.html
@@ -47,7 +47,7 @@ npm start
 | `create_room` | `{}` | A หรือ B (คนแรก) |
 | `join_room` | `{ code }` | คนที่สอง |
 | `ready` | `{}` | ทั้งคู่ |
-| `module_action` | `{ moduleId, action }` | เฉพาะ A |
+| `module_action` | `{ moduleId, action }` | เฉพาะ A — `action` แตกต่างกันตาม module type: `{type:'cut_wire', index}` (wire), `{type:'tap'}` \| `{type:'hold_release', heldSeconds, releaseDigit}` (button), `{type:'confirm_switches', positions:[...]}` (switch), `{type:'submit_code', code:'0000'}` (code) |
 
 ### Server → Client
 | type | payload | หมายเหตุ |
@@ -71,9 +71,15 @@ npm start
 - **Client:** Vanilla JS + DOM (ไม่ใช้ Canvas) เพื่อความง่ายในการ debug ช่วง prototype
 - **Reconnect:** grace period 15 วิ ถ้าเกินเวลานี้ยังไม่กลับมา → จบรอบ กลับ lobby (ไม่ตัดสินเป็น exploded ทันที)
 
-## สิ่งที่ยังไม่ทำใน v0.1 (ตาม Roadmap เดิม)
+## สิ่งที่ยังไม่ทำ (ตาม Roadmap เดิม)
 
-- Switch / Code / Light / Logic module (v0.2–v0.3)
+- Light / Logic module (v0.3)
 - ระบบสุ่มความหลากหลายของกฎ ไม่ใช่แค่ค่า (v0.4)
 - คู่มือหลายรูปแบบ/หลายเวอร์ชันระเบิด (v0.5)
 - Animation, polish UI (v0.6)
+
+## Known gaps (ยังไม่แก้)
+
+- **Reconnect ยังไม่ครบวงจร:** server มี grace period 15 วิ แต่ client ไม่มี logic รีเข้าห้องเดิมอัตโนมัติ (ต้องเพิ่ม `rejoin` message + เก็บ roomCode/role ไว้ฝั่ง client)
+- **Button module ไว้ใจ client:** `releaseDigit` คำนวณจาก client เอง ไม่ได้ตรวจกับเวลาจริงฝั่ง server
+- **ไม่มีปุ่มออกจากห้อง** ก่อนเริ่มเกม (ต้อง refresh หน้าเท่านั้น)

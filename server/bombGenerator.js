@@ -78,9 +78,64 @@ function generateButtonModule() {
   };
 }
 
+// --- Switch Module ---
+// กฎ (ดูตารางในคู่มือ): ตำแหน่งที่ถูกต้องขึ้นกับ (สีสวิตช์, LED ติดหรือดับ)
+//   แดง  + LED ติด -> ขึ้น (up)   | แดง  + LED ดับ -> ลง (down)
+//   น้ำเงิน + LED ติด -> ลง (down) | น้ำเงิน + LED ดับ -> ขึ้น (up)
+//   เหลือง + LED ติด -> ขึ้น (up)  | เหลือง + LED ดับ -> ลง (down)
+// ต้องตั้งสวิตช์ทุกตัวให้ถูกพร้อมกัน แล้วกด "ยืนยัน" ทีเดียว (ไม่เช็คทีละตัว)
+const SWITCH_COLORS = ['red', 'blue', 'yellow'];
+const SWITCH_RULE_TABLE = {
+  red: { on: 'up', off: 'down' },
+  blue: { on: 'down', off: 'up' },
+  yellow: { on: 'up', off: 'down' },
+};
+
+function generateSwitchModule() {
+  const switchCount = randInt(3, 4);
+  const switches = Array.from({ length: switchCount }, () => ({
+    color: pick(SWITCH_COLORS),
+    ledOn: Math.random() < 0.5,
+    // ตำแหน่งเริ่มต้นสุ่ม ผู้เล่นต้องปรับเอง (อาจตรงกับคำตอบโดยบังเอิญก็ได้)
+    initialPosition: Math.random() < 0.5 ? 'up' : 'down',
+  }));
+
+  const correctPositions = switches.map((s) => SWITCH_RULE_TABLE[s.color][s.ledOn ? 'on' : 'off']);
+
+  return {
+    id: 'switch',
+    type: 'switch',
+    solved: false,
+    visibleState: {
+      switches: switches.map((s) => ({ color: s.color, ledOn: s.ledOn, initialPosition: s.initialPosition })),
+    },
+    _answer: { positions: correctPositions },
+  };
+}
+
+// --- Code Module ---
+// กฎ: รหัส 4 หลัก = (seed x ตัวคูณตามสีจอ) mod 10000 เติม 0 ข้างหน้าให้ครบ 4 หลัก
+// ตัวคูณ: แดง=13, น้ำเงิน=7, เหลือง=21, ขาว=3
+const CODE_COLORS = ['red', 'blue', 'yellow', 'white'];
+const CODE_MULTIPLIER = { red: 13, blue: 7, yellow: 21, white: 3 };
+
+function generateCodeModule() {
+  const seed = randInt(10, 99);
+  const color = pick(CODE_COLORS);
+  const code = String((seed * CODE_MULTIPLIER[color]) % 10000).padStart(4, '0');
+
+  return {
+    id: 'code',
+    type: 'code',
+    solved: false,
+    visibleState: { seed, color },
+    _answer: { code },
+  };
+}
+
 function generateBomb() {
   return {
-    modules: [generateWireModule(), generateButtonModule()],
+    modules: [generateWireModule(), generateButtonModule(), generateSwitchModule(), generateCodeModule()],
   };
 }
 
