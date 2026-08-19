@@ -4,8 +4,16 @@
 const { generateBomb, sanitizeModuleForClient, sanitizeModelForClient } = require('./bombGenerator');
 
 const MAX_STRIKES = 1;
-const ROUND_SECONDS = 3 * 60; // 3:00
 const RECONNECT_GRACE_MS = 15 * 1000; // 15 วินาที
+
+// โหมดความยาก: ผู้เล่นเลือกได้ตอนอยู่ห้อง waiting ก่อนกด Ready
+const MODES = {
+  easy: { seconds: 10 * 60, label: 'ง่าย' },
+  medium: { seconds: 7 * 60, label: 'กลาง' },
+  hard: { seconds: 5 * 60, label: 'ยาก' },
+  buddy: { seconds: 3 * 60, label: 'คู่หูนักกู้' },
+};
+const DEFAULT_MODE = 'medium';
 
 /** @type {Map<string, Room>} */
 const rooms = new Map();
@@ -29,10 +37,21 @@ class Room {
     this.status = 'waiting'; // waiting -> ready -> playing -> defused | exploded
     this.strikes = 0;
     this.maxStrikes = MAX_STRIKES;
-    this.timeRemaining = ROUND_SECONDS;
+    this.mode = DEFAULT_MODE;
+    this.timeRemaining = MODES[this.mode].seconds;
     this.bomb = null;
     this.tickInterval = null;
     this.readyFlags = { A: false, B: false };
+  }
+
+  // เลือกโหมดความยาก (เฉพาะตอนยังไม่เริ่มเกม) — เปลี่ยนโหมดจะรีเซ็ต Ready ทั้งคู่
+  // เพราะเวลาต่อรอบเปลี่ยนไป ต้องให้ทั้งคู่กด Ready ยืนยันใหม่
+  setMode(mode) {
+    if (!MODES[mode] || this.status !== 'waiting') return false;
+    this.mode = mode;
+    this.timeRemaining = MODES[mode].seconds;
+    this.readyFlags = { A: false, B: false };
+    return true;
   }
 
   assignRole(ws) {
@@ -58,7 +77,7 @@ class Room {
   startRound() {
     this.status = 'playing';
     this.strikes = 0;
-    this.timeRemaining = ROUND_SECONDS;
+    this.timeRemaining = MODES[this.mode].seconds;
     this.bomb = generateBomb();
 
     this.tickInterval = setInterval(() => {
@@ -127,6 +146,7 @@ class Room {
       maxStrikes: this.maxStrikes,
       timeRemaining: this.timeRemaining,
       readyFlags: this.readyFlags,
+      mode: this.mode,
     };
     if (this.bomb && role === 'A') {
       base.modules = this.bomb.modules.map(sanitizeModuleForClient);
@@ -163,4 +183,6 @@ module.exports = {
   getRoom,
   removeRoomIfEmpty,
   RECONNECT_GRACE_MS,
+  MODES,
+  DEFAULT_MODE,
 };

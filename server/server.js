@@ -65,6 +65,8 @@ function handleMessage(ws, msg) {
       return onJoinRoom(ws, msg.code);
     case 'ready':
       return onReady(ws);
+    case 'set_mode':
+      return onSetMode(ws, msg.mode);
     case 'module_action':
       return onModuleAction(ws, msg);
     default:
@@ -99,6 +101,15 @@ function onJoinRoom(ws, code) {
   // แจ้งทั้งสองฝั่งด้วย state ล่าสุด (แยก payload ตาม role)
   room.sendTo('A', room.publicStateFor('A'));
   room.sendTo('B', room.publicStateFor('B'));
+}
+
+function onSetMode(ws, mode) {
+  const room = getRoom(ws.roomCode);
+  if (!room || !ws.role) return;
+  const changed = room.setMode(mode);
+  if (!changed) return;
+  room.broadcast({ type: 'mode_update', mode: room.mode, timeRemaining: room.timeRemaining });
+  room.broadcast({ type: 'ready_update', readyFlags: room.readyFlags });
 }
 
 function onReady(ws) {

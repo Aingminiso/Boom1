@@ -194,6 +194,22 @@ document.getElementById('btn-ready').onclick = () => {
   document.getElementById('ready-status').textContent = 'รอผู้เล่นอีกฝั่งกด Ready...';
 };
 
+// v0.6.2: เลือกโหมดความยาก (ง่าย/กลาง/ยาก/คู่หูนักกู้) ก่อนกด Ready — ฝั่งไหนกดก็ได้
+// เปลี่ยนโหมดจะรีเซ็ต Ready ของทั้งคู่ฝั่ง server (เวลาต่อรอบเปลี่ยน ต้องกด Ready ใหม่)
+document.querySelectorAll('.mode-btn').forEach((btn) => {
+  btn.onclick = () => {
+    SFX.click();
+    ws.send(JSON.stringify({ type: 'set_mode', mode: btn.dataset.mode }));
+  };
+});
+
+function applySelectedMode(mode) {
+  document.querySelectorAll('.mode-btn').forEach((btn) => {
+    btn.classList.toggle('selected', btn.dataset.mode === mode);
+  });
+}
+applySelectedMode('medium'); // ค่าเริ่มต้นฝั่ง server ก่อนได้ room_state/mode_update
+
 document.getElementById('btn-restart').onclick = () => {
   location.reload();
 };
@@ -211,13 +227,25 @@ function handleServerMessage(msg) {
       showScreen('waiting');
       break;
 
+    case 'room_state':
+      // ส่งมาหลัง create/join (และตอน reconnect ในอนาคต) — ใช้ sync โหมดที่เลือกไว้อยู่
+      if (msg.mode) applySelectedMode(msg.mode);
+      break;
+
     case 'error':
       document.getElementById('lobby-message').textContent = msg.message;
+      break;
+
+    case 'mode_update':
+      applySelectedMode(msg.mode);
+      document.getElementById('ready-status').textContent = 'เปลี่ยนโหมดแล้ว กด Ready อีกครั้งทั้งคู่';
       break;
 
     case 'ready_update':
       if (msg.readyFlags.A && msg.readyFlags.B) {
         document.getElementById('ready-status').textContent = 'ทั้งคู่พร้อมแล้ว กำลังเริ่ม...';
+      } else if (!msg.readyFlags.A && !msg.readyFlags.B) {
+        document.getElementById('ready-status').textContent = 'รอผู้เล่นอีกฝั่ง...';
       }
       break;
 

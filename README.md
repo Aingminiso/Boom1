@@ -1,4 +1,4 @@
-# 💣 BOMB CO-OP — Prototype v0.6
+# 💣 BOMB CO-OP — Prototype v0.6.2
 
 โครงสร้างโปรเจกต์:
 
@@ -49,6 +49,7 @@ npm start
 | `create_room` | `{}` | A หรือ B (คนแรก) |
 | `join_room` | `{ code }` | คนที่สอง |
 | `ready` | `{}` | ทั้งคู่ |
+| `set_mode` | `{ mode: 'easy'\|'medium'\|'hard'\|'buddy' }` | ฝั่งไหนก็ได้ (v0.6.2) — เฉพาะตอนห้องยัง `waiting`, เปลี่ยนโหมด server จะ reset `readyFlags` ทั้งคู่ให้อัตโนมัติ |
 | `module_action` | `{ moduleId, action }` | เฉพาะ A — `action` แตกต่างกันตาม module type: `{type:'cut_wire', index}` (wire), `{type:'tap'}` \| `{type:'hold_release', heldSeconds, releaseDigit}` (button), `{type:'confirm_switches', positions:[...]}` (switch), `{type:'submit_code', code:'0000'}` (code), `{type:'confirm_lights', states:[...]}` (light), `{type:'submit_logic', choice:'yes'\|'no'}` (logic) |
 
 ### Server → Client
@@ -56,7 +57,9 @@ npm start
 |---|---|---|
 | `room_created` / `joined_room` | `{ code, role }` | ยืนยัน role ที่ได้รับ |
 | `error` | `{ message }` | เช่น ห้องเต็ม/ไม่พบห้อง |
-| `ready_update` | `{ readyFlags }` | |
+| `ready_update` | `{ readyFlags }` | ยิงซ้ำเป็น `{A:false,B:false}` เมื่อมีการ `set_mode` (v0.6.2) |
+| `mode_update` | `{ mode, timeRemaining }` | v0.6.2 — sync โหมด/เวลาต่อรอบที่เลือกล่าสุดให้ทั้งสองฝั่ง |
+| `room_state` | `{ code, role, status, strikes, maxStrikes, timeRemaining, readyFlags, mode, modules?, model? }` | ส่งหลัง `room_created`/`joined_room` เสมอ — `mode` เพิ่มมาตั้งแต่ v0.6.2 ให้ client sync ปุ่มโหมดที่เลือกไว้ |
 | `game_start` | `{ modules, model }` (เฉพาะ A) | B ไม่ได้รับ modules หรือ model เลย — แต่ละ module ใน `visibleState` มี field `edition: 'A'\|'B'\|'C'` (v0.4, ตัวบ่งชี้ว่ารอบนี้ module นี้ใช้สูตรไหน A ต้องอ่านค่านี้บอก B) — `model: { id, name, tagline }` เพิ่มมาตั้งแต่ v0.5 (รุ่นระเบิดทั้งลูก ปั๊มอยู่บนป้าย MODEL ที่ A เห็น A ต้องบอก B ให้เลือกคู่มือรุ่นที่ตรงกัน) |
 | `timer_tick` | `{ timeRemaining }` | ทุก 1 วิ |
 | `strike` | `{ strikes, maxStrikes }` | |
@@ -66,6 +69,7 @@ npm start
 
 ## Design Decisions ที่ยืนยันแล้ว
 
+- **โหมดความยาก / เวลาต่อรอบ (v0.6.2):** ในหน้า waiting ก่อนกด Ready ผู้เล่นฝั่งไหนก็ได้เลือกโหมดได้ 4 แบบ — **ง่าย 10:00** / **กลาง 07:00** (ค่าเริ่มต้น) / **ยาก 05:00** / **คู่หูนักกู้ 03:00** — โหมดที่เลือกจะ sync ให้อีกฝั่งเห็นทันที (`mode_update`) และรีเซ็ต Ready ทั้งคู่อัตโนมัติเพราะเวลาต่อรอบเปลี่ยน (ต้องกด Ready ยืนยันใหม่ทั้งคู่) เปลี่ยนโหมดได้เฉพาะตอนห้องยัง `waiting` เท่านั้น ระหว่างเล่นเปลี่ยนไม่ได้ — `timeRemaining` เริ่มต้นของห้องจะอัปเดตตามโหมดที่เลือกไว้ล่าสุดทันทีที่กด ไม่ต้องรอ round เริ่ม
 - **Animation / UI Polish (v0.6):** เพิ่ม feedback ให้ทุกเหตุการณ์หลักโดยไม่แตะ message schema เดิมเลย (ผูกกับ event ที่มีอยู่แล้ว: `strike`, `module_result`, `timer_tick`, `game_over`) —
   - **Screen transition:** เปลี่ยนหน้า (lobby/waiting/game/end) แบบ fade + slide แทนการสลับ display ทันที
   - **Timer:** จอเวลาพัลส์เมื่อเหลือ ≤30 วิ (`timer-warn`) และพัลส์แรง+เปลี่ยนสีแดงเมื่อ ≤10 วิ (`timer-critical`) พร้อม vignette แดงเต้นทั่วจอ (`#danger-overlay`)
