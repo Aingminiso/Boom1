@@ -69,6 +69,7 @@ npm start
 - **Network:** Online ผ่าน WebSocket, deploy บน Render.com free tier แทน LAN local
 - **Room Join:** ใช้รหัสห้อง 6 หลัก ผู้เล่นแชร์กันเอง
 - **Client:** Vanilla JS + DOM (ไม่ใช้ Canvas) เพื่อความง่ายในการ debug ช่วง prototype
+- **Sound:** synthesize เสียงเองด้วย Web Audio API (ไม่ใช้ไฟล์เสียงภายนอก) — คลิก/ตัดสาย/สลับสวิตช์/กดคีย์แพด, ถูก/ผิด, strike, นับถอยหลังช่วง 30 วิสุดท้าย (เร่งจังหวะที่ 10 วิ), defused/exploded. เสียงจะเล่นได้หลัง user gesture แรก (ข้อจำกัดของเบราว์เซอร์)
 - **Reconnect:** grace period 15 วิ ถ้าเกินเวลานี้ยังไม่กลับมา → จบรอบ กลับ lobby (ไม่ตัดสินเป็น exploded ทันที)
 
 ## สิ่งที่ยังไม่ทำ (ตาม Roadmap เดิม)

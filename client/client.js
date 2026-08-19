@@ -27,6 +27,72 @@ let roomCode = null;
 let modulesState = {}; // moduleId -> { visibleState, solved }
 let holdStart = null;
 let holdModuleId = null;
+let lastAlarmSecond = null;
+
+// --- Sound Effects (synthesized ด้วย Web Audio API, ไม่ต้องใช้ไฟล์เสียงภายนอก) ---
+const SFX = (() => {
+  let ctx = null;
+  function ensureCtx() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+
+  function tone({ freq = 440, duration = 0.12, type = 'sine', gain = 0.15, freqEnd = null, delay = 0 }) {
+    const c = ensureCtx();
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = type;
+    const t0 = c.currentTime + delay;
+    osc.frequency.setValueAtTime(freq, t0);
+    if (freqEnd !== null) osc.frequency.exponentialRampToValueAtTime(Math.max(freqEnd, 1), t0 + duration);
+    g.gain.setValueAtTime(gain, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+    osc.connect(g).connect(c.destination);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.02);
+  }
+
+  function noiseBurst({ duration = 0.25, gain = 0.2, delay = 0 }) {
+    const c = ensureCtx();
+    const bufferSize = c.sampleRate * duration;
+    const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    const noise = c.createBufferSource();
+    noise.buffer = buffer;
+    const g = c.createGain();
+    const t0 = c.currentTime + delay;
+    g.gain.setValueAtTime(gain, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+    noise.connect(g).connect(c.destination);
+    noise.start(t0);
+  }
+
+  return {
+    click: () => tone({ freq: 700, duration: 0.05, type: 'square', gain: 0.1 }),
+    keypress: () => tone({ freq: 500, duration: 0.05, type: 'square', gain: 0.08 }),
+    toggle: () => tone({ freq: 300, duration: 0.07, type: 'triangle', gain: 0.12 }),
+    cut: () => tone({ freq: 900, freqEnd: 200, duration: 0.15, type: 'sawtooth', gain: 0.12 }),
+    correct: () => {
+      tone({ freq: 523, duration: 0.1, type: 'sine', gain: 0.15 });
+      tone({ freq: 784, duration: 0.15, type: 'sine', gain: 0.15, delay: 0.09 });
+    },
+    wrong: () => tone({ freq: 180, freqEnd: 80, duration: 0.3, type: 'sawtooth', gain: 0.18 }),
+    strike: () => {
+      tone({ freq: 220, duration: 0.18, type: 'square', gain: 0.16 });
+      noiseBurst({ duration: 0.15, gain: 0.1 });
+    },
+    tick: (urgent) => tone({ freq: urgent ? 1200 : 900, duration: 0.06, type: 'square', gain: urgent ? 0.12 : 0.08 }),
+    defused: () => {
+      [523, 659, 784, 1046].forEach((f, i) => tone({ freq: f, duration: 0.18, type: 'sine', gain: 0.16, delay: i * 0.1 }));
+    },
+    explode: () => {
+      noiseBurst({ duration: 0.9, gain: 0.35 });
+      tone({ freq: 150, freqEnd: 30, duration: 0.7, type: 'sawtooth', gain: 0.25 });
+    },
+  };
+})();
 
 const screens = {
   lobby: document.getElementById('screen-lobby'),
@@ -49,11 +115,13 @@ function connect() {
 }
 
 document.getElementById('btn-create').onclick = () => {
+  SFX.click();
   connect();
   ws.onopen = () => ws.send(JSON.stringify({ type: 'create_room' }));
 };
 
 document.getElementById('btn-join').onclick = () => {
+  SFX.click();
   const code = document.getElementById('input-code').value.trim();
   if (!/^\d{6}$/.test(code)) {
     document.getElementById('lobby-message').textContent = 'กรุณากรอกรหัสห้อง 6 หลัก';
@@ -64,6 +132,7 @@ document.getElementById('btn-join').onclick = () => {
 };
 
 document.getElementById('btn-ready').onclick = () => {
+  SFX.click();
   ws.send(JSON.stringify({ type: 'ready' }));
   document.getElementById('ready-status').textContent = 'รอผู้เล่นอีกฝั่งกด Ready...';
 };
@@ -97,6 +166,7 @@ function handleServerMessage(msg) {
 
     case 'game_start':
       showScreen('game');
+      lastAlarmSecond = null;
       document.getElementById('hud-role-label').textContent =
         myRole === 'A' ? 'BOMB HANDLER (PLAYER A)' : 'EXPERT (PLAYER B)';
       document.getElementById('player-a-view').classList.toggle('active', myRole === 'A');
@@ -111,10 +181,15 @@ function handleServerMessage(msg) {
 
     case 'timer_tick':
       updateTimerDisplay(msg.timeRemaining);
+      if (msg.timeRemaining <= 30 && msg.timeRemaining > 0 && msg.timeRemaining !== lastAlarmSecond) {
+        lastAlarmSecond = msg.timeRemaining;
+        SFX.tick(msg.timeRemaining <= 10);
+      }
       break;
 
     case 'strike':
       updateStrikeDots(msg.strikes);
+      SFX.strike();
       break;
 
     case 'module_result':
@@ -122,11 +197,13 @@ function handleServerMessage(msg) {
         if (msg.result === 'correct') {
           modulesState[msg.moduleId].solved = true;
           renderModules();
+          SFX.correct();
         } else {
           const mod = modulesState[msg.moduleId];
           if (mod && mod.type === 'code') mod._input = '';
           renderModules();
           flashWrong(msg.moduleId);
+          SFX.wrong();
         }
       }
       break;
@@ -145,12 +222,14 @@ function handleServerMessage(msg) {
         title.textContent = 'BOMB DEFUSED!';
         title.style.color = '#06d6a0';
         detail.textContent = `เหลือเวลา ${formatTime(msg.timeRemaining)}`;
+        SFX.defused();
       } else {
         icon.innerHTML = EXPLOSION_SVG;
         title.textContent = 'BOOM! GAME OVER';
         title.style.color = '#ff5a5f';
         detail.textContent =
           msg.reason === 'timeout' ? 'หมดเวลา' : msg.reason === 'max_strikes' ? 'พลาดครบ 3 ครั้ง' : 'เกมจบกะทันหัน';
+        SFX.explode();
       }
       break;
 
@@ -190,7 +269,10 @@ function renderModules() {
         wireEl.className = `wire wire-${color}`;
         wireEl.title = `สาย ${index + 1} (${color})`;
         if (!mod.solved) {
-          wireEl.onclick = () => sendModuleAction(mod.id, { type: 'cut_wire', index });
+          wireEl.onclick = () => {
+            SFX.cut();
+            sendModuleAction(mod.id, { type: 'cut_wire', index });
+          };
         } else {
           wireEl.classList.add('cut');
         }
@@ -208,6 +290,7 @@ function renderModules() {
       btn.textContent = mod.visibleState.label;
       if (!mod.solved) {
         btn.onpointerdown = () => {
+          SFX.click();
           holdStart = Date.now();
           holdModuleId = mod.id;
         };
@@ -251,6 +334,7 @@ function renderModules() {
         lever.textContent = mod._positions[index] === 'up' ? '▲' : '▼';
         if (!mod.solved) {
           lever.onclick = () => {
+            SFX.toggle();
             mod._positions[index] = mod._positions[index] === 'up' ? 'down' : 'up';
             renderModules();
           };
@@ -263,7 +347,10 @@ function renderModules() {
         const confirmBtn = document.createElement('button');
         confirmBtn.className = 'switch-confirm';
         confirmBtn.textContent = 'ยืนยันตำแหน่ง';
-        confirmBtn.onclick = () => sendModuleAction(mod.id, { type: 'confirm_switches', positions: mod._positions });
+        confirmBtn.onclick = () => {
+          SFX.click();
+          sendModuleAction(mod.id, { type: 'confirm_switches', positions: mod._positions });
+        };
         box.querySelector('.module-body').appendChild(confirmBtn);
       }
     }
@@ -288,6 +375,7 @@ function renderModules() {
           key.className = 'keypad-btn';
           key.textContent = d;
           key.onclick = () => {
+            SFX.keypress();
             if (mod._input.length < 4) mod._input += d;
             renderModules();
           };
@@ -297,6 +385,7 @@ function renderModules() {
         clearKey.className = 'keypad-btn keypad-clear';
         clearKey.textContent = 'CLEAR';
         clearKey.onclick = () => {
+          SFX.click();
           mod._input = '';
           renderModules();
         };
@@ -304,6 +393,7 @@ function renderModules() {
         enterKey.className = 'keypad-btn keypad-enter';
         enterKey.textContent = 'ENTER';
         enterKey.onclick = () => {
+          SFX.click();
           if (mod._input.length === 4) sendModuleAction(mod.id, { type: 'submit_code', code: mod._input });
         };
         pad.appendChild(clearKey);
