@@ -111,6 +111,14 @@ const screens = {
   end: document.getElementById('screen-end'),
 };
 
+// v0.6 fix: #screen-lobby starts with class="screen active" hardcoded in the HTML
+// (not via showScreen()), so it never got the "screen-in" class that the fade-in
+// transition needs — it was stuck at opacity:0 forever (still clickable, since
+// opacity doesn't block pointer events, just invisible). Add it once on load.
+requestAnimationFrame(() => requestAnimationFrame(() => {
+  document.querySelector('.screen.active')?.classList.add('screen-in');
+}));
+
 function showScreen(name) {
   Object.values(screens).forEach((s) => s.classList.remove('active', 'screen-in', 'shake'));
   const target = screens[name];
