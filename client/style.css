@@ -340,6 +340,112 @@ input:focus { outline: none; border-color: #ffd166; }
 }
 .manual-edition-block .manual-hint { margin-left: 6px; }
 
+/* --- Model plate (v0.5) — ป้าย MODEL บน bomb-panel ฝั่ง A --- */
+.model-plate {
+  background: #16171b;
+  border: 1px solid #3a3d44;
+  border-radius: 6px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.model-label { font-size: 10px; color: #8a8f99; letter-spacing: 1px; }
+.model-number { font-family: 'Courier New', monospace; font-size: 15px; font-weight: 700; color: #ffd166; letter-spacing: 1px; }
+
+/* --- Manual toolbar (v0.5): ค้นหา + สลับโหมด Full/Quick Reference --- */
+.manual-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.manual-search {
+  flex: 1;
+  min-width: 160px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbb994;
+  font-size: 14px;
+}
+.manual-mode-toggle {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #7a2e2e;
+  background: #7a2e2e;
+  color: #f4ecd8;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.manual-mode-toggle:hover { background: #943a3a; }
+
+/* --- Manual cover (v0.5): เลือกรุ่นระเบิดก่อนเข้าเนื้อหา --- */
+.manual-cover { text-align: center; }
+.model-select-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+.model-select-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 2px solid #cbb994;
+  background: #fffaf0;
+  color: #2b2116;
+  cursor: pointer;
+  min-width: 100px;
+}
+.model-select-btn:hover { border-color: #7a2e2e; }
+.model-select-btn.active { border-color: #7a2e2e; background: #e6dcc2; box-shadow: 0 0 0 2px rgba(122, 46, 46, 0.3); }
+.model-select-name { font-family: 'Courier New', monospace; font-weight: 700; font-size: 16px; }
+.model-select-tag { font-size: 11px; opacity: 0.7; }
+
+/* --- Manual TOC (v0.5): quick-jump ไปแต่ละ module --- */
+.manual-toc {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 2px dashed #cbb994;
+}
+.manual-toc a {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #e6dcc2;
+  color: #7a2e2e;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+.manual-toc a:hover { background: #d8c9a3; }
+
+.manual-no-results { text-align: center; padding: 20px 0; }
+
+/* --- Quick Reference mode (v0.5): สลับระหว่างเนื้อหาละเอียด vs สรุปบรรทัดเดียว --- */
+.manual-quick { display: none; font-family: 'Courier New', monospace; font-size: 13px; background: #e6dcc2; padding: 6px 10px; border-radius: 6px; }
+#manual-container.mode-quick .manual-detail { display: none; }
+#manual-container.mode-quick .manual-quick { display: block; }
+
+/* --- Manual theme per bomb model (v0.5): เปลี่ยนโทนสีเล่มคู่มือให้ตรงรุ่นที่เลือก --- */
+.manual-book[data-theme="K17"] { background: #f4ecd8; }
+.manual-book[data-theme="K17"] .manual-page h3 { color: #7a2e2e; }
+.manual-book[data-theme="X42"] { background: #dfe8e4; }
+.manual-book[data-theme="X42"] .manual-page h3 { color: #1f5c4f; }
+.manual-book[data-theme="X42"] .manual-edition-block { border-left-color: #1f5c4f; }
+.manual-book[data-theme="X42"] .manual-toc a { background: #c7dcd4; color: #1f5c4f; }
+.manual-book[data-theme="V9"] { background: #e9e0cf; }
+.manual-book[data-theme="V9"] .manual-page h3 { color: #4a3a05; }
+.manual-book[data-theme="V9"] .manual-edition-block { border-left-color: #8a5a2e; }
+.manual-book[data-theme="V9"] .manual-toc a { background: #ddd0ac; color: #4a3a05; }
+
 /* Switch module */
 .switch-row { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
 .switch-unit { display: flex; flex-direction: column; align-items: center; gap: 10px; }

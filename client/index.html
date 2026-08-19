@@ -80,194 +80,286 @@
           <span class="serial-barcode"></span>
           <span id="serial-number" class="serial-number"></span>
         </div>
-        <div class="sticky-note">Stay Calm.<br />Trust your Expert.</div>
+        <div class="model-plate">
+          <span class="model-label">MODEL</span>
+          <span id="model-number" class="model-number">—</span>
+        </div>
+        <div class="sticky-note">Stay Calm.<br />Trust your Expert.<br /><small>บอก B ด้วยว่ารุ่นอะไร!</small></div>
       </div>
     </div>
   </div>
 
   <div id="player-b-view" class="player-view">
     <h2>📖 คู่มือ (Expert Manual)</h2>
-    <div class="manual-book">
+    <div class="manual-toolbar">
+      <input id="manual-search" class="manual-search" placeholder="🔍 ค้นหาในคู่มือ (เช่น 'wire', 'สีแดง')" />
+      <button id="manual-mode-toggle" class="manual-mode-toggle" type="button">⚡ สลับเป็น Quick Reference</button>
+    </div>
+    <div class="manual-book" id="manual-book">
       <div class="manual-spiral">
         <span></span><span></span><span></span><span></span><span></span><span></span>
       </div>
-      <div id="manual-container">
+      <div id="manual-container" class="mode-full">
+        <section class="manual-page manual-cover" id="manual-cover">
+          <h3>📇 เลือกรุ่นระเบิด</h3>
+          <p class="manual-hint">ถาม Player A ว่าป้าย <b>MODEL</b> บนตัวระเบิดเขียนว่าอะไร แล้วกดเลือกให้ตรง — คู่มือจะปรับธีมให้เข้าเล่มที่ถูกต้อง</p>
+          <div class="model-select-row">
+            <button class="model-select-btn" data-model="K17" type="button">
+              <span class="model-select-name">K-17</span>
+              <span class="model-select-tag">รุ่นมาตรฐาน</span>
+            </button>
+            <button class="model-select-btn" data-model="X42" type="button">
+              <span class="model-select-name">X-42</span>
+              <span class="model-select-tag">รุ่นทดลอง</span>
+            </button>
+            <button class="model-select-btn" data-model="V9" type="button">
+              <span class="model-select-name">V-9</span>
+              <span class="model-select-tag">รุ่นเก่า</span>
+            </button>
+          </div>
+          <p id="manual-current-model" class="manual-hint">ยังไม่ได้เลือกรุ่น — เนื้อหากฎด้านล่างใช้ได้กับทุกรุ่น เพียงแค่ยังไม่ได้ปรับธีมให้ตรงเล่ม</p>
+        </section>
+
+        <nav id="manual-toc" class="manual-toc">
+          <a href="#manual-wire" data-target="manual-wire">🔌 Wire</a>
+          <a href="#manual-button" data-target="manual-button">🔘 Button</a>
+          <a href="#manual-switch" data-target="manual-switch">🔀 Switch</a>
+          <a href="#manual-code" data-target="manual-code">🔢 Code</a>
+          <a href="#manual-light" data-target="manual-light">💡 Light</a>
+          <a href="#manual-logic" data-target="manual-logic">🧩 Logic</a>
+        </nav>
+
         <p class="manual-hint manual-edition-notice">⚠️ ทุกโมดูลมีป้าย <b>EDITION (A/B/C)</b> ปั๊มอยู่ — ให้ถาม A ก่อนเสมอว่าเห็น Edition อะไร แล้วดูกฎเฉพาะ Edition นั้น ห้ามข้าม</p>
-        <section class="manual-page manual-wire">
+        <section class="manual-page manual-wire" id="manual-wire">
           <h3>🔌 Wire Module</h3>
           <div class="manual-edition-block">
             <h4>Edition A</h4>
-            <ul>
-              <li>ถ้าไม่มีสายสีแดงเลย → ตัดสาย <b>เส้นที่ 2</b></li>
-              <li>ถ้าสายเส้นสุดท้ายเป็นสีขาว → ตัด <b>เส้นสุดท้าย</b></li>
-              <li>ถ้ามีสายสีแดงมากกว่า 1 เส้น → ตัดสาย <b>สีแดงเส้นสุดท้าย</b></li>
-              <li>นอกเหนือจากนี้ → ตัด <b>เส้นแรก</b></li>
-            </ul>
+            <div class="manual-detail">
+              <ul>
+                <li>ถ้าไม่มีสายสีแดงเลย → ตัดสาย <b>เส้นที่ 2</b></li>
+                <li>ถ้าสายเส้นสุดท้ายเป็นสีขาว → ตัด <b>เส้นสุดท้าย</b></li>
+                <li>ถ้ามีสายสีแดงมากกว่า 1 เส้น → ตัดสาย <b>สีแดงเส้นสุดท้าย</b></li>
+                <li>นอกเหนือจากนี้ → ตัด <b>เส้นแรก</b></li>
+              </ul>
+            </div>
+            <p class="manual-quick">ไม่มีแดง→#2 | ท้าย=ขาว→ท้าย | แดง&gt;1→แดงเส้นท้าย | อื่นๆ→#1</p>
           </div>
           <div class="manual-edition-block">
             <h4>Edition B</h4>
-            <ul>
-              <li>ถ้า<b>จำนวนสายทั้งหมด</b>เป็นเลขคู่ → ตัด <b>เส้นกลาง</b> (นับจากซ้าย ถ้าเศษให้ปัดลง)</li>
-              <li>ถ้าจำนวนสายเป็นเลขคี่ และมี<b>สายน้ำเงินมากกว่าเหลือง</b> → ตัด <b>สายน้ำเงินเส้นแรก</b></li>
-              <li>นอกเหนือจากนี้ → ตัด <b>เส้นสุดท้าย</b></li>
-            </ul>
+            <div class="manual-detail">
+              <ul>
+                <li>ถ้า<b>จำนวนสายทั้งหมด</b>เป็นเลขคู่ → ตัด <b>เส้นกลาง</b> (นับจากซ้าย ถ้าเศษให้ปัดลง)</li>
+                <li>ถ้าจำนวนสายเป็นเลขคี่ และมี<b>สายน้ำเงินมากกว่าเหลือง</b> → ตัด <b>สายน้ำเงินเส้นแรก</b></li>
+                <li>นอกเหนือจากนี้ → ตัด <b>เส้นสุดท้าย</b></li>
+              </ul>
+            </div>
+            <p class="manual-quick">จำนวนคู่→กลาง | คี่&น้ำเงิน&gt;เหลือง→น้ำเงินแรก | อื่นๆ→ท้าย</p>
           </div>
           <div class="manual-edition-block">
             <h4>Edition C</h4>
-            <ul>
-              <li>ถ้าสาย<b>เส้นแรกกับเส้นสุดท้ายสีเดียวกัน</b> → ตัด <b>เส้นที่ 2</b></li>
-              <li>ถ้ามี<b>สายสีดำพอดี 1 เส้น</b> → ตัด <b>สายสีดำเส้นนั้น</b></li>
-              <li>นอกเหนือจากนี้ → ตัด <b>เส้นสุดท้าย</b></li>
-            </ul>
+            <div class="manual-detail">
+              <ul>
+                <li>ถ้าสาย<b>เส้นแรกกับเส้นสุดท้ายสีเดียวกัน</b> → ตัด <b>เส้นที่ 2</b></li>
+                <li>ถ้ามี<b>สายสีดำพอดี 1 เส้น</b> → ตัด <b>สายสีดำเส้นนั้น</b></li>
+                <li>นอกเหนือจากนี้ → ตัด <b>เส้นสุดท้าย</b></li>
+              </ul>
+            </div>
+            <p class="manual-quick">หัว=ท้ายสีเดียวกัน→#2 | ดำพอดี1→ดำเส้นนั้น | อื่นๆ→ท้าย</p>
           </div>
         </section>
-        <section class="manual-page manual-button">
+        <section class="manual-page manual-button" id="manual-button">
           <h3>🔘 Button Module</h3>
           <div class="manual-edition-block">
             <h4>Edition A</h4>
-            <ul>
-              <li>ปุ่ม <b>สีแดง</b> ข้อความ <b>DETONATE</b> → กดค้างไว้ แล้วปล่อยตอนตัวเลขนับถอยหลังลงท้ายด้วย <b>5</b></li>
-              <li>ปุ่ม <b>สีน้ำเงิน</b> (ข้อความอะไรก็ได้) → กดครั้งเดียวแล้วปล่อยทันที</li>
-              <li>นอกเหนือจากนี้ → กดค้างไว้อย่างน้อย <b>3 วินาที</b> แล้วค่อยปล่อย</li>
-            </ul>
+            <div class="manual-detail">
+              <ul>
+                <li>ปุ่ม <b>สีแดง</b> ข้อความ <b>DETONATE</b> → กดค้างไว้ แล้วปล่อยตอนตัวเลขนับถอยหลังลงท้ายด้วย <b>5</b></li>
+                <li>ปุ่ม <b>สีน้ำเงิน</b> (ข้อความอะไรก็ได้) → กดครั้งเดียวแล้วปล่อยทันที</li>
+                <li>นอกเหนือจากนี้ → กดค้างไว้อย่างน้อย <b>3 วินาที</b> แล้วค่อยปล่อย</li>
+              </ul>
+            </div>
+            <p class="manual-quick">แดง+DETONATE→ค้างปล่อยเลขท้าย5 | น้ำเงิน→แตะ | อื่นๆ→ค้าง≥3วิ</p>
           </div>
           <div class="manual-edition-block">
             <h4>Edition B</h4>
-            <ul>
-              <li>ข้อความ <b>HOLD</b> (สีอะไรก็ได้) → กดค้างไว้ แล้วปล่อยตอนตัวเลขลงท้ายด้วย <b>1</b></li>
-              <li>ปุ่ม <b>สีเหลือง</b> → กดครั้งเดียวแล้วปล่อยทันที</li>
-              <li>นอกเหนือจากนี้ → กดค้างไว้อย่างน้อย <b>5 วินาที</b></li>
-            </ul>
+            <div class="manual-detail">
+              <ul>
+                <li>ข้อความ <b>HOLD</b> (สีอะไรก็ได้) → กดค้างไว้ แล้วปล่อยตอนตัวเลขลงท้ายด้วย <b>1</b></li>
+                <li>ปุ่ม <b>สีเหลือง</b> → กดครั้งเดียวแล้วปล่อยทันที</li>
+                <li>นอกเหนือจากนี้ → กดค้างไว้อย่างน้อย <b>5 วินาที</b></li>
+              </ul>
+            </div>
+            <p class="manual-quick">HOLD→ค้างปล่อยเลขท้าย1 | เหลือง→แตะ | อื่นๆ→ค้าง≥5วิ</p>
           </div>
           <div class="manual-edition-block">
             <h4>Edition C</h4>
-            <ul>
-              <li>ปุ่ม <b>สีขาว</b> ข้อความ <b>ABORT</b> → กดครั้งเดียวแล้วปล่อยทันที</li>
-              <li>ข้อความ <b>PRESS</b> (สีอะไรก็ได้) → กดค้างไว้ แล้วปล่อยตอนตัวเลขลงท้ายด้วย <b>9</b></li>
-              <li>นอกเหนือจากนี้ → กดค้างไว้อย่างน้อย <b>2 วินาที</b></li>
-            </ul>
+            <div class="manual-detail">
+              <ul>
+                <li>ปุ่ม <b>สีขาว</b> ข้อความ <b>ABORT</b> → กดครั้งเดียวแล้วปล่อยทันที</li>
+                <li>ข้อความ <b>PRESS</b> (สีอะไรก็ได้) → กดค้างไว้ แล้วปล่อยตอนตัวเลขลงท้ายด้วย <b>9</b></li>
+                <li>นอกเหนือจากนี้ → กดค้างไว้อย่างน้อย <b>2 วินาที</b></li>
+              </ul>
+            </div>
+            <p class="manual-quick">ขาว+ABORT→แตะ | PRESS→ค้างปล่อยเลขท้าย9 | อื่นๆ→ค้าง≥2วิ</p>
           </div>
         </section>
-        <section class="manual-page manual-switch">
+        <section class="manual-page manual-switch" id="manual-switch">
           <h3>🔀 Switch Module</h3>
           <p>ถามสี + LED ติดหรือดับ ของแต่ละสวิตช์ แล้วบอกตำแหน่งที่ถูกต้อง (ต้องตั้งให้ถูก<b>ทุกตัวพร้อมกัน</b>ก่อนกดยืนยัน):</p>
           <div class="manual-edition-block">
             <h4>Edition A</h4>
-            <table class="manual-table">
-              <tr><th>สี</th><th>LED ติด</th><th>LED ดับ</th></tr>
-              <tr><td>🔴 แดง</td><td>ขึ้น (Up)</td><td>ลง (Down)</td></tr>
-              <tr><td>🔵 น้ำเงิน</td><td>ลง (Down)</td><td>ขึ้น (Up)</td></tr>
-              <tr><td>🟡 เหลือง</td><td>ขึ้น (Up)</td><td>ลง (Down)</td></tr>
-            </table>
+            <div class="manual-detail">
+              <table class="manual-table">
+                <tr><th>สี</th><th>LED ติด</th><th>LED ดับ</th></tr>
+                <tr><td>🔴 แดง</td><td>ขึ้น (Up)</td><td>ลง (Down)</td></tr>
+                <tr><td>🔵 น้ำเงิน</td><td>ลง (Down)</td><td>ขึ้น (Up)</td></tr>
+                <tr><td>🟡 เหลือง</td><td>ขึ้น (Up)</td><td>ลง (Down)</td></tr>
+              </table>
+            </div>
+            <p class="manual-quick">แดง on↑off↓ | น้ำเงิน on↓off↑ | เหลือง on↑off↓</p>
           </div>
           <div class="manual-edition-block">
             <h4>Edition B <span class="manual-hint">(ตารางกลับด้านจาก A)</span></h4>
-            <table class="manual-table">
-              <tr><th>สี</th><th>LED ติด</th><th>LED ดับ</th></tr>
-              <tr><td>🔴 แดง</td><td>ลง (Down)</td><td>ขึ้น (Up)</td></tr>
-              <tr><td>🔵 น้ำเงิน</td><td>ขึ้น (Up)</td><td>ลง (Down)</td></tr>
-              <tr><td>🟡 เหลือง</td><td>ลง (Down)</td><td>ขึ้น (Up)</td></tr>
-            </table>
+            <div class="manual-detail">
+              <table class="manual-table">
+                <tr><th>สี</th><th>LED ติด</th><th>LED ดับ</th></tr>
+                <tr><td>🔴 แดง</td><td>ลง (Down)</td><td>ขึ้น (Up)</td></tr>
+                <tr><td>🔵 น้ำเงิน</td><td>ขึ้น (Up)</td><td>ลง (Down)</td></tr>
+                <tr><td>🟡 เหลือง</td><td>ลง (Down)</td><td>ขึ้น (Up)</td></tr>
+              </table>
+            </div>
+            <p class="manual-quick">แดง on↓off↑ | น้ำเงิน on↑off↓ | เหลือง on↓off↑</p>
           </div>
           <div class="manual-edition-block">
             <h4>Edition C <span class="manual-hint">(ไม่สนสี — นับรวมทั้งหมด)</span></h4>
-            <p>นับจำนวนสวิตช์ที่ LED <b>ติด</b> รวมทุกตัว — ถ้าเป็น<b>เลขคู่</b> ตั้ง<b>ขึ้นหมดทุกตัว</b>, ถ้าเป็น<b>เลขคี่</b> ตั้ง<b>ลงหมดทุกตัว</b></p>
+            <div class="manual-detail">
+              <p>นับจำนวนสวิตช์ที่ LED <b>ติด</b> รวมทุกตัว — ถ้าเป็น<b>เลขคู่</b> ตั้ง<b>ขึ้นหมดทุกตัว</b>, ถ้าเป็น<b>เลขคี่</b> ตั้ง<b>ลงหมดทุกตัว</b></p>
+            </div>
+            <p class="manual-quick">นับติดรวม: คู่→ขึ้นหมด | คี่→ลงหมด</p>
           </div>
         </section>
-        <section class="manual-page manual-code">
+        <section class="manual-page manual-code" id="manual-code">
           <h3>🔢 Code Module</h3>
           <p>ถามเลข <b>SEED</b> (2 หลัก) กับสีจอ แล้วคำนวณรหัส 4 หลัก:</p>
           <div class="manual-edition-block">
             <h4>Edition A</h4>
-            <p class="manual-formula">รหัส = (SEED × ตัวคูณ) mod 10000</p>
-            <table class="manual-table">
-              <tr><th>สีจอ</th><th>ตัวคูณ</th></tr>
-              <tr><td>🔴 แดง</td><td>13</td></tr>
-              <tr><td>🔵 น้ำเงิน</td><td>7</td></tr>
-              <tr><td>🟡 เหลือง</td><td>21</td></tr>
-              <tr><td>⚪ ขาว</td><td>3</td></tr>
-            </table>
-            <p class="manual-hint">เช่น SEED 47 สีน้ำเงิน → 47×7 = 329 → รหัสคือ <b>0329</b></p>
+            <div class="manual-detail">
+              <p class="manual-formula">รหัส = (SEED × ตัวคูณ) mod 10000</p>
+              <table class="manual-table">
+                <tr><th>สีจอ</th><th>ตัวคูณ</th></tr>
+                <tr><td>🔴 แดง</td><td>13</td></tr>
+                <tr><td>🔵 น้ำเงิน</td><td>7</td></tr>
+                <tr><td>🟡 เหลือง</td><td>21</td></tr>
+                <tr><td>⚪ ขาว</td><td>3</td></tr>
+              </table>
+              <p class="manual-hint">เช่น SEED 47 สีน้ำเงิน → 47×7 = 329 → รหัสคือ <b>0329</b></p>
+            </div>
+            <p class="manual-quick">รหัส=(SEED×ตัวคูณ)mod10000 — แดง13/น้ำเงิน7/เหลือง21/ขาว3</p>
           </div>
           <div class="manual-edition-block">
             <h4>Edition B</h4>
-            <p class="manual-formula">รหัส = (SEED + ค่าออฟเซ็ต) × 37, mod 10000</p>
-            <table class="manual-table">
-              <tr><th>สีจอ</th><th>ออฟเซ็ต</th></tr>
-              <tr><td>🔴 แดง</td><td>44</td></tr>
-              <tr><td>🔵 น้ำเงิน</td><td>19</td></tr>
-              <tr><td>🟡 เหลือง</td><td>61</td></tr>
-              <tr><td>⚪ ขาว</td><td>8</td></tr>
-            </table>
+            <div class="manual-detail">
+              <p class="manual-formula">รหัส = (SEED + ค่าออฟเซ็ต) × 37, mod 10000</p>
+              <table class="manual-table">
+                <tr><th>สีจอ</th><th>ออฟเซ็ต</th></tr>
+                <tr><td>🔴 แดง</td><td>44</td></tr>
+                <tr><td>🔵 น้ำเงิน</td><td>19</td></tr>
+                <tr><td>🟡 เหลือง</td><td>61</td></tr>
+                <tr><td>⚪ ขาว</td><td>8</td></tr>
+              </table>
+            </div>
+            <p class="manual-quick">รหัส=(SEED+ออฟเซ็ต)×37 mod10000 — แดง44/น้ำเงิน19/เหลือง61/ขาว8</p>
           </div>
           <div class="manual-edition-block">
             <h4>Edition C</h4>
-            <p class="manual-formula">รหัส = (SEED² + ค่าออฟเซ็ต) mod 10000</p>
-            <table class="manual-table">
-              <tr><th>สีจอ</th><th>ออฟเซ็ต</th></tr>
-              <tr><td>🔴 แดง</td><td>101</td></tr>
-              <tr><td>🔵 น้ำเงิน</td><td>202</td></tr>
-              <tr><td>🟡 เหลือง</td><td>303</td></tr>
-              <tr><td>⚪ ขาว</td><td>404</td></tr>
-            </table>
+            <div class="manual-detail">
+              <p class="manual-formula">รหัส = (SEED² + ค่าออฟเซ็ต) mod 10000</p>
+              <table class="manual-table">
+                <tr><th>สีจอ</th><th>ออฟเซ็ต</th></tr>
+                <tr><td>🔴 แดง</td><td>101</td></tr>
+                <tr><td>🔵 น้ำเงิน</td><td>202</td></tr>
+                <tr><td>🟡 เหลือง</td><td>303</td></tr>
+                <tr><td>⚪ ขาว</td><td>404</td></tr>
+              </table>
+            </div>
+            <p class="manual-quick">รหัส=(SEED²+ออฟเซ็ต)mod10000 — แดง101/น้ำเงิน202/เหลือง303/ขาว404</p>
           </div>
           <p class="manual-hint">ผลลัพธ์ทุก Edition เติม 0 ข้างหน้าให้ครบ 4 หลักเสมอ</p>
         </section>
-        <section class="manual-page manual-light">
+        <section class="manual-page manual-light" id="manual-light">
           <h3>💡 Light Module</h3>
           <p>ถามสี + จังหวะกระพริบ (ช้า/เร็ว) ของแต่ละดวง แล้วบอกว่าควรติดหรือดับ (ต้องตั้งให้ถูก<b>ทุกดวงพร้อมกัน</b>ก่อนกดยืนยัน):</p>
           <div class="manual-edition-block">
             <h4>Edition A</h4>
-            <table class="manual-table">
-              <tr><th>สี</th><th>กระพริบช้า</th><th>กระพริบเร็ว</th></tr>
-              <tr><td>🔴 แดง</td><td>ติด (On)</td><td>ดับ (Off)</td></tr>
-              <tr><td>🔵 น้ำเงิน</td><td>ดับ (Off)</td><td>ติด (On)</td></tr>
-              <tr><td>🟡 เหลือง</td><td>ติด (On)</td><td>ติด (On)</td></tr>
-            </table>
+            <div class="manual-detail">
+              <table class="manual-table">
+                <tr><th>สี</th><th>กระพริบช้า</th><th>กระพริบเร็ว</th></tr>
+                <tr><td>🔴 แดง</td><td>ติด (On)</td><td>ดับ (Off)</td></tr>
+                <tr><td>🔵 น้ำเงิน</td><td>ดับ (Off)</td><td>ติด (On)</td></tr>
+                <tr><td>🟡 เหลือง</td><td>ติด (On)</td><td>ติด (On)</td></tr>
+              </table>
+            </div>
+            <p class="manual-quick">แดง slow-on/fast-off | น้ำเงิน slow-off/fast-on | เหลือง slow-on/fast-on</p>
           </div>
           <div class="manual-edition-block">
             <h4>Edition B <span class="manual-hint">(ตารางกลับด้าน)</span></h4>
-            <table class="manual-table">
-              <tr><th>สี</th><th>กระพริบช้า</th><th>กระพริบเร็ว</th></tr>
-              <tr><td>🔴 แดง</td><td>ดับ (Off)</td><td>ติด (On)</td></tr>
-              <tr><td>🔵 น้ำเงิน</td><td>ติด (On)</td><td>ดับ (Off)</td></tr>
-              <tr><td>🟡 เหลือง</td><td>ดับ (Off)</td><td>ดับ (Off)</td></tr>
-            </table>
+            <div class="manual-detail">
+              <table class="manual-table">
+                <tr><th>สี</th><th>กระพริบช้า</th><th>กระพริบเร็ว</th></tr>
+                <tr><td>🔴 แดง</td><td>ดับ (Off)</td><td>ติด (On)</td></tr>
+                <tr><td>🔵 น้ำเงิน</td><td>ติด (On)</td><td>ดับ (Off)</td></tr>
+                <tr><td>🟡 เหลือง</td><td>ดับ (Off)</td><td>ดับ (Off)</td></tr>
+              </table>
+            </div>
+            <p class="manual-quick">แดง slow-off/fast-on | น้ำเงิน slow-on/fast-off | เหลือง slow-off/fast-off</p>
           </div>
           <div class="manual-edition-block">
             <h4>Edition C <span class="manual-hint">(ไม่สนสี/จังหวะ — นับรวมทั้งหมด)</span></h4>
-            <p>นับจำนวนดวงที่ <b>ติด</b> อยู่ตอนเริ่ม (ก่อนกดอะไร) — ถ้าเป็น<b>เลขคู่</b> ตั้ง<b>ติดหมดทุกดวง</b>, ถ้าเป็น<b>เลขคี่</b> ตั้ง<b>ดับหมดทุกดวง</b></p>
+            <div class="manual-detail">
+              <p>นับจำนวนดวงที่ <b>ติด</b> อยู่ตอนเริ่ม (ก่อนกดอะไร) — ถ้าเป็น<b>เลขคู่</b> ตั้ง<b>ติดหมดทุกดวง</b>, ถ้าเป็น<b>เลขคี่</b> ตั้ง<b>ดับหมดทุกดวง</b></p>
+            </div>
+            <p class="manual-quick">นับติดตอนเริ่ม: คู่→ติดหมด | คี่→ดับหมด</p>
           </div>
         </section>
-        <section class="manual-page manual-logic">
+        <section class="manual-page manual-logic" id="manual-logic">
           <h3>🧩 Logic Module</h3>
           <p>โมดูลนี้อ่านค่าจาก <b>Wire Module</b> และ <b>Button Module</b> ในระเบิดลูกเดียวกัน (ดูจากที่ A อธิบายมาได้เลย ไม่ต้องคำนวณซับซ้อน — edition ของ Wire/Button เองไม่เกี่ยวกับข้อนี้):</p>
           <div class="manual-edition-block">
             <h4>Edition A (AND)</h4>
-            <ul>
-              <li><b>CHECK A</b> = จำนวนสายไฟ<b>สีแดง</b>ในโมดูล Wire เป็น<b>เลขคี่</b></li>
-              <li><b>CHECK B</b> = สีปุ่มในโมดูล Button เป็น<b>สีแดง หรือ สีน้ำเงิน</b></li>
-            </ul>
-            <p class="manual-formula">กด YES ก็ต่อเมื่อ CHECK A และ CHECK B เป็นจริง<b>ทั้งคู่</b> — นอกเหนือจากนี้กด NO</p>
+            <div class="manual-detail">
+              <ul>
+                <li><b>CHECK A</b> = จำนวนสายไฟ<b>สีแดง</b>ในโมดูล Wire เป็น<b>เลขคี่</b></li>
+                <li><b>CHECK B</b> = สีปุ่มในโมดูล Button เป็น<b>สีแดง หรือ สีน้ำเงิน</b></li>
+              </ul>
+              <p class="manual-formula">กด YES ก็ต่อเมื่อ CHECK A และ CHECK B เป็นจริง<b>ทั้งคู่</b> — นอกเหนือจากนี้กด NO</p>
+            </div>
+            <p class="manual-quick">AND: แดงคี่ & ปุ่ม(แดง/น้ำเงิน) → YES | อื่นๆ → NO</p>
           </div>
           <div class="manual-edition-block">
             <h4>Edition B (XOR)</h4>
-            <ul>
-              <li><b>CHECK A</b> = จำนวนสายไฟ<b>ทั้งหมด</b>ในโมดูล Wire <b>มากกว่า 4 เส้น</b></li>
-              <li><b>CHECK B</b> = ข้อความปุ่มในโมดูล Button เป็น <b>HOLD หรือ PRESS</b></li>
-            </ul>
-            <p class="manual-formula">กด YES ก็ต่อเมื่อ CHECK A กับ CHECK B เป็นจริง<b>ข้อใดข้อหนึ่งเท่านั้น</b> (ไม่ใช่ทั้งคู่ ไม่ใช่ไม่มีเลย) — นอกเหนือจากนี้กด NO</p>
+            <div class="manual-detail">
+              <ul>
+                <li><b>CHECK A</b> = จำนวนสายไฟ<b>ทั้งหมด</b>ในโมดูล Wire <b>มากกว่า 4 เส้น</b></li>
+                <li><b>CHECK B</b> = ข้อความปุ่มในโมดูล Button เป็น <b>HOLD หรือ PRESS</b></li>
+              </ul>
+              <p class="manual-formula">กด YES ก็ต่อเมื่อ CHECK A กับ CHECK B เป็นจริง<b>ข้อใดข้อหนึ่งเท่านั้น</b> (ไม่ใช่ทั้งคู่ ไม่ใช่ไม่มีเลย) — นอกเหนือจากนี้กด NO</p>
+            </div>
+            <p class="manual-quick">XOR: สาย&gt;4 กับ ปุ่ม(HOLD/PRESS) ต่างกัน → YES | เหมือนกัน → NO</p>
           </div>
           <div class="manual-edition-block">
             <h4>Edition C (NOR)</h4>
-            <ul>
-              <li><b>CHECK A</b> = มีสายไฟ<b>สีขาว</b>อยู่ในโมดูล Wire อย่างน้อย 1 เส้น</li>
-              <li><b>CHECK B</b> = สีปุ่มในโมดูล Button เป็น<b>สีเหลือง</b></li>
-            </ul>
-            <p class="manual-formula">กด YES ก็ต่อเมื่อ CHECK A และ CHECK B เป็น<b>เท็จทั้งคู่</b> — นอกเหนือจากนี้กด NO</p>
+            <div class="manual-detail">
+              <ul>
+                <li><b>CHECK A</b> = มีสายไฟ<b>สีขาว</b>อยู่ในโมดูล Wire อย่างน้อย 1 เส้น</li>
+                <li><b>CHECK B</b> = สีปุ่มในโมดูล Button เป็น<b>สีเหลือง</b></li>
+              </ul>
+              <p class="manual-formula">กด YES ก็ต่อเมื่อ CHECK A และ CHECK B เป็น<b>เท็จทั้งคู่</b> — นอกเหนือจากนี้กด NO</p>
+            </div>
+            <p class="manual-quick">NOR: ไม่มีขาว & ปุ่มไม่เหลือง → YES | อื่นๆ → NO</p>
           </div>
         </section>
         <p class="manual-hint">💬 ให้ Player A อธิบายสี/ข้อความ/Edition ที่เห็นทางเสียง (นอกเกม) แล้วดูกฎเฉพาะ Edition นั้นเพื่อบอกวิธีแก้</p>
+        <p id="manual-no-results" class="manual-hint manual-no-results" hidden>ไม่พบเนื้อหาที่ค้นหา ลองคำอื่น หรือกดล้างช่องค้นหา</p>
       </div>
     </div>
   </div>

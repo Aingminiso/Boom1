@@ -1,4 +1,4 @@
-# 💣 BOMB CO-OP — Prototype v0.4
+# 💣 BOMB CO-OP — Prototype v0.5
 
 โครงสร้างโปรเจกต์:
 
@@ -7,12 +7,12 @@ bomb-coop/
 ├── server/
 │   ├── server.js          # WebSocket server + serve client static files
 │   ├── gameState.js       # Room / Timer / Strike / broadcast logic
-│   ├── bombGenerator.js   # สุ่ม Bomb (Wire, Button, Switch, Code, Light, Logic module — v0.4: แต่ละ module สุ่ม "Edition" A/B/C สลับสูตรกฎ ไม่ใช่แค่ค่าพารามิเตอร์)
+│   ├── bombGenerator.js   # สุ่ม Bomb (Wire, Button, Switch, Code, Light, Logic module — v0.4: Edition A/B/C ต่อ module | v0.5: เพิ่มสุ่ม "Model" ทั้งลูก (K-17/X-42/V-9) ส่งให้ A เท่านั้น)
 │   └── package.json
 └── client/
-    ├── index.html          # คู่มือ B ขยายให้มีกฎครบทั้ง 3 Edition ต่อ module
-    ├── style.css
-    ├── client.js           # เพิ่ม badge "REV. A/B/C" บนแต่ละโมดูลในมุมมอง A
+    ├── index.html          # v0.5: คู่มือ B ปรับใหม่ทั้งหมด — cover เลือกรุ่นระเบิด (theme), TOC quick-jump, ช่องค้นหา, และเนื้อหา Quick Reference คู่กับฉบับเต็มทุก module
+    ├── style.css           # v0.5: ธีมคู่มือ 3 แบบตามรุ่น (K-17/X-42/V-9), สไตล์ cover/TOC/toolbar/model-plate
+    ├── client.js           # v0.4: badge "REV. A/B/C" บนแต่ละโมดูล | v0.5: ป้าย MODEL ฝั่ง A + logic เลือกรุ่น/สลับโหมด/ค้นหา/quick-jump ฝั่ง B
     └── assets/
         └── bgm.mp3     # เพลงประกอบฉากเกม (เล่นวนตอน game_start)
 ```
@@ -57,7 +57,7 @@ npm start
 | `room_created` / `joined_room` | `{ code, role }` | ยืนยัน role ที่ได้รับ |
 | `error` | `{ message }` | เช่น ห้องเต็ม/ไม่พบห้อง |
 | `ready_update` | `{ readyFlags }` | |
-| `game_start` | `{ modules }` (เฉพาะ A) | B ไม่ได้รับ modules เลย — แต่ละ module ใน `visibleState` มี field `edition: 'A'\|'B'\|'C'` เพิ่มมาตั้งแต่ v0.4 (ตัวบ่งชี้ว่ารอบนี้ module นี้ใช้สูตรไหน A ต้องอ่านค่านี้บอก B) |
+| `game_start` | `{ modules, model }` (เฉพาะ A) | B ไม่ได้รับ modules หรือ model เลย — แต่ละ module ใน `visibleState` มี field `edition: 'A'\|'B'\|'C'` (v0.4, ตัวบ่งชี้ว่ารอบนี้ module นี้ใช้สูตรไหน A ต้องอ่านค่านี้บอก B) — `model: { id, name, tagline }` เพิ่มมาตั้งแต่ v0.5 (รุ่นระเบิดทั้งลูก ปั๊มอยู่บนป้าย MODEL ที่ A เห็น A ต้องบอก B ให้เลือกคู่มือรุ่นที่ตรงกัน) |
 | `timer_tick` | `{ timeRemaining }` | ทุก 1 วิ |
 | `strike` | `{ strikes, maxStrikes }` | |
 | `module_result` | `{ moduleId, result }` | `correct` \| `wrong` |
@@ -66,6 +66,7 @@ npm start
 
 ## Design Decisions ที่ยืนยันแล้ว
 
+- **Bomb Model / Manual หลายรูปแบบ (v0.5):** ทุกรอบระเบิดจะสุ่ม **Model** ทั้งลูกจาก 3 รุ่น (`K-17` / `X-42` / `V-9`) ปั๊มอยู่บนป้าย MODEL ข้างป้าย SERIAL NO. ที่ A เห็นเท่านั้น — server ไม่ส่งค่านี้ให้ B เลย A ต้องบอก B ปากเปล่า แล้ว B กดเลือกรุ่นที่หน้า cover ของคู่มือ เพื่อปรับ**ธีมสี**ของทั้งเล่มให้ตรง (K-17 = โทนกระดาษคลาสสิก, X-42 = โทนเขียวรุ่นทดลอง, V-9 = โทนน้ำตาลรุ่นเก่า) เนื้อหากฎยังอ้างอิง Edition A/B/C ต่อ module เหมือนเดิม (Model กับ Edition เป็นข้อมูลคนละชั้นที่ A ต้องบอกทั้งคู่) — เพิ่มคู่มือยัง**สลับได้ 2 รูปแบบ**: **Full Manual** (คำอธิบายละเอียด ตาราง/สูตรครบ) กับ **⚡ Quick Reference** (สรุปกฎทุก edition เหลือบรรทัดเดียวต่อ edition สำหรับตอนรีบ) มีช่อง**ค้นหา**และแถบ **TOC quick-jump** ไปแต่ละ module ด้วย
 - **Rule Variety (v0.4):** ทุก module (wire/button/switch/code/light/logic) สุ่ม **Edition A/B/C** ต่อรอบ — แต่ละ Edition คือ "สูตร/กฎ" คนละชุด ไม่ใช่แค่ค่าพารามิเตอร์คนละค่า Player A เห็นป้าย `REV. X` บนโมดูล ต้องบอก B เพิ่มอีกชั้นหนึ่ง (เพิ่มความซับซ้อนของการสื่อสารตามคอนเซปต์) คู่มือของ B เป็น static และมีกฎครบทั้ง 3 Edition อยู่แล้ว ไม่ต้อง sync จาก server ต่อรอบ
 - **Strike System:** พลาดได้ **1 ครั้ง** ก่อนระเบิด (ตรงตาม draft แนวคิดแรก)
 - **Communication:** ไม่มีระบบเสียง/แชทในเกม ผู้เล่นคุยกันผ่านโปรแกรมนอก (Discord ฯลฯ)
@@ -78,8 +79,7 @@ npm start
 
 ## สิ่งที่ยังไม่ทำ (ตาม Roadmap เดิม)
 
-- คู่มือหลายรูปแบบ/หลายเวอร์ชันระเบิด (v0.5) — v0.4 ทำให้ "กฎ" สุ่มแล้ว (Edition A/B/C) แต่ตัวรูปเล่ม/skin คู่มือยังเป็นแบบเดียว
-- Animation, polish UI (v0.6)
+- Animation, polish UI (v0.6) — ธีมคู่มือ v0.5 เป็นแค่เปลี่ยนสี ยังไม่มี animation/transition ตอนสลับรุ่นหรือสลับโหมด
 
 ## Known gaps (ยังไม่แก้)
 

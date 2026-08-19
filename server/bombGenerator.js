@@ -15,6 +15,21 @@ const BUTTON_COLORS = ['red', 'blue', 'yellow', 'white'];
 const BUTTON_LABELS = ['DETONATE', 'ABORT', 'HOLD', 'PRESS'];
 const EDITIONS = ['A', 'B', 'C'];
 
+// --- Bomb Model (v0.5) ---
+// สุ่ม "รุ่นระเบิด" ทั้งลูกต่อรอบ — ปั๊มอยู่บนป้าย SERIAL/MODEL ที่ A เห็น
+// B ไม่ได้รับค่านี้จาก server เลย ต้องให้ A บอกปากเปล่า แล้วไปเปิด "คู่มือรุ่นนั้น" ที่ฝั่ง client
+// (คู่มือแต่ละรุ่นเป็นแค่ skin/ธีมการนำเสนอที่ต่างกัน เนื้อหากฎยังอ้างอิง Edition A/B/C ต่อโมดูลเหมือนเดิม
+//  แต่การต้องหาเล่มให้ถูกก่อน คือการเพิ่มขั้นตอนสื่อสาร/ยืนยันข้อมูลอีกชั้นตามคอนเซปต์ "รุ่น K-17" ในเอกสารต้นฉบับ)
+const BOMB_MODELS = [
+  { id: 'K17', name: 'K-17', tagline: 'รุ่นมาตรฐาน ผลิตเป็นล็อตใหญ่' },
+  { id: 'X42', name: 'X-42', tagline: 'รุ่นทดลอง สายการผลิตจำกัด' },
+  { id: 'V9', name: 'V-9', tagline: 'รุ่นเก่า ยังพบใช้งานอยู่ประปราย' },
+];
+
+function pickModel() {
+  return pick(BOMB_MODELS);
+}
+
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -349,6 +364,7 @@ function generateBomb() {
   const wireModule = generateWireModule();
   const buttonModule = generateButtonModule();
   return {
+    model: pickModel(), // v0.5: รุ่นระเบิด — ส่งให้ A เท่านั้น (ผ่าน sanitizeModelForClient)
     modules: [
       wireModule,
       buttonModule,
@@ -370,7 +386,15 @@ function sanitizeModuleForClient(mod) {
   };
 }
 
+// model ไม่มีคำตอบ/ความลับอยู่แล้ว (เป็นแค่ป้ายที่ A มองเห็นตรงๆ) แต่กันเผื่อโครงสร้างเปลี่ยนในอนาคต
+function sanitizeModelForClient(model) {
+  if (!model) return null;
+  return { id: model.id, name: model.name, tagline: model.tagline };
+}
+
 module.exports = {
   generateBomb,
   sanitizeModuleForClient,
+  sanitizeModelForClient,
+  BOMB_MODELS,
 };

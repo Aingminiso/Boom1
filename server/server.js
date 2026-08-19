@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 const { createRoom, getRoom, removeRoomIfEmpty, RECONNECT_GRACE_MS } = require('./gameState');
-const { sanitizeModuleForClient } = require('./bombGenerator');
+const { sanitizeModuleForClient, sanitizeModelForClient } = require('./bombGenerator');
 
 const PORT = process.env.PORT || 3000;
 const CLIENT_DIR = path.join(__dirname, '..', 'client');
@@ -109,7 +109,11 @@ function onReady(ws) {
 
   if (room.bothReady() && room.status === 'waiting') {
     room.startRound();
-    room.sendTo('A', { type: 'game_start', modules: room.bomb.modules.map(sanitizeModuleForClient) });
+    room.sendTo('A', {
+      type: 'game_start',
+      modules: room.bomb.modules.map(sanitizeModuleForClient),
+      model: sanitizeModelForClient(room.bomb.model), // v0.5: ป้ายรุ่นระเบิด ให้ A บอก B ปากเปล่า
+    });
     room.sendTo('B', { type: 'game_start' }); // B ไม่ได้ modules state ของระเบิด
     room.broadcastTimer();
   }

@@ -1,7 +1,7 @@
 // gameState.js
 // จัดการ Room, Player role (A/B), Timer, Strike, Bomb state
 
-const { generateBomb, sanitizeModuleForClient } = require('./bombGenerator');
+const { generateBomb, sanitizeModuleForClient, sanitizeModelForClient } = require('./bombGenerator');
 
 const MAX_STRIKES = 1;
 const ROUND_SECONDS = 3 * 60; // 3:00
@@ -130,6 +130,7 @@ class Room {
     };
     if (this.bomb && role === 'A') {
       base.modules = this.bomb.modules.map(sanitizeModuleForClient);
+      base.model = sanitizeModelForClient(this.bomb.model); // v0.5: ป้ายรุ่นระเบิด เฉพาะ A
     }
     // Player B ไม่ได้รับ visibleState ของระเบิดเลย (เห็นแค่คู่มือ static ฝั่ง client เอง)
     return base;

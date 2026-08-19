@@ -185,6 +185,8 @@ function handleServerMessage(msg) {
       document.getElementById('player-b-view').classList.toggle('active', myRole === 'B');
       if (myRole === 'A') {
         document.getElementById('serial-number').textContent = `A${roomCode}`;
+        const modelEl = document.getElementById('model-number');
+        if (modelEl) modelEl.textContent = msg.model ? msg.model.name : '—';
         modulesState = {};
         msg.modules.forEach((m) => (modulesState[m.id] = m));
         renderModules();
@@ -514,6 +516,61 @@ function flashWrong(moduleId) {
     }
   });
 }
+
+// --- Manual UI (v0.5): เลือกรุ่นระเบิด (theme), Quick Reference toggle, ค้นหา, quick-jump TOC ---
+// ทั้งหมดนี้เป็นแค่ UI ฝั่ง B ล้วนๆ ไม่มีการ sync กับ server (B ไม่เคยได้รับ model จาก server อยู่แล้ว
+// ต้องให้ A บอกปากเปล่าเท่านั้น ตรงตามคอนเซปต์ Asymmetric Information)
+const MODEL_NAMES = { K17: 'K-17', X42: 'X-42', V9: 'V-9' };
+
+document.querySelectorAll('.model-select-btn').forEach((btn) => {
+  btn.onclick = () => {
+    SFX.click();
+    const modelId = btn.dataset.model;
+    const manualBook = document.getElementById('manual-book');
+    manualBook.dataset.theme = modelId;
+    document.querySelectorAll('.model-select-btn').forEach((b) => b.classList.toggle('active', b === btn));
+    const current = document.getElementById('manual-current-model');
+    current.textContent = `📖 กำลังดูคู่มือรุ่น ${MODEL_NAMES[modelId] || modelId} — ถ้า A บอกรุ่นอื่น กดเปลี่ยนได้ตลอด`;
+  };
+});
+
+const manualModeToggle = document.getElementById('manual-mode-toggle');
+if (manualModeToggle) {
+  manualModeToggle.onclick = () => {
+    SFX.click();
+    const container = document.getElementById('manual-container');
+    const isQuick = container.classList.toggle('mode-quick');
+    container.classList.toggle('mode-full', !isQuick);
+    manualModeToggle.textContent = isQuick ? '📖 สลับเป็น Full Manual' : '⚡ สลับเป็น Quick Reference';
+  };
+}
+
+const manualSearch = document.getElementById('manual-search');
+if (manualSearch) {
+  manualSearch.addEventListener('input', () => {
+    const query = manualSearch.value.trim().toLowerCase();
+    const sections = document.querySelectorAll('#manual-container .manual-page:not(.manual-cover)');
+    let anyVisible = false;
+    sections.forEach((section) => {
+      const match = !query || section.textContent.toLowerCase().includes(query);
+      section.hidden = !match;
+      if (match) anyVisible = true;
+    });
+    const noResults = document.getElementById('manual-no-results');
+    if (noResults) noResults.hidden = anyVisible || !query;
+  });
+}
+
+document.querySelectorAll('#manual-toc a').forEach((link) => {
+  link.onclick = (e) => {
+    e.preventDefault();
+    const target = document.getElementById(link.dataset.target);
+    if (target) {
+      target.hidden = false; // เผื่อกำลังถูกซ่อนจากการค้นหาอยู่
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+});
 
 function showToast(text) {
   let toast = document.getElementById('toast');
