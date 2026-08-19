@@ -29,7 +29,17 @@ let holdStart = null;
 let holdModuleId = null;
 let lastAlarmSecond = null;
 
-// --- Sound Effects (synthesized ด้วย Web Audio API, ไม่ต้องใช้ไฟล์เสียงภายนอก) ---
+// --- Background Music ---
+const bgm = document.getElementById('bgm');
+bgm.volume = 0.35;
+function playBgm() {
+  bgm.currentTime = 0;
+  bgm.play().catch(() => {}); // เบราว์เซอร์อาจ block ถ้ายังไม่มี user gesture มาก่อนหน้านี้เลย
+}
+function stopBgm() {
+  bgm.pause();
+  bgm.currentTime = 0;
+}
 const SFX = (() => {
   let ctx = null;
   function ensureCtx() {
@@ -110,6 +120,7 @@ function connect() {
   ws = new WebSocket(WS_URL);
   ws.onmessage = (event) => handleServerMessage(JSON.parse(event.data));
   ws.onclose = () => {
+    stopBgm();
     document.getElementById('lobby-message').textContent = 'การเชื่อมต่อขาดหาย กรุณารีเฟรชหน้า';
   };
 }
@@ -167,6 +178,7 @@ function handleServerMessage(msg) {
     case 'game_start':
       showScreen('game');
       lastAlarmSecond = null;
+      playBgm();
       document.getElementById('hud-role-label').textContent =
         myRole === 'A' ? 'BOMB HANDLER (PLAYER A)' : 'EXPERT (PLAYER B)';
       document.getElementById('player-a-view').classList.toggle('active', myRole === 'A');
@@ -214,6 +226,7 @@ function handleServerMessage(msg) {
 
     case 'game_over':
       showScreen('end');
+      stopBgm();
       const title = document.getElementById('end-title');
       const detail = document.getElementById('end-detail');
       const icon = document.getElementById('end-icon');
@@ -228,7 +241,7 @@ function handleServerMessage(msg) {
         title.textContent = 'BOOM! GAME OVER';
         title.style.color = '#ff5a5f';
         detail.textContent =
-          msg.reason === 'timeout' ? 'หมดเวลา' : msg.reason === 'max_strikes' ? 'พลาดครบ 3 ครั้ง' : 'เกมจบกะทันหัน';
+          msg.reason === 'timeout' ? 'หมดเวลา' : msg.reason === 'max_strikes' ? `พลาดครบ ${msg.strikes} ครั้ง` : 'เกมจบกะทันหัน';
         SFX.explode();
       }
       break;

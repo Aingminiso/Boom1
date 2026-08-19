@@ -3,7 +3,7 @@
 
 const { generateBomb, sanitizeModuleForClient } = require('./bombGenerator');
 
-const MAX_STRIKES = 3;
+const MAX_STRIKES = 1;
 const ROUND_SECONDS = 3 * 60; // 3:00
 const RECONNECT_GRACE_MS = 15 * 1000; // 15 วินาที
 

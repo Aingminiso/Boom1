@@ -15,6 +15,7 @@ const MIME = {
   '.html': 'text/html',
   '.css': 'text/css',
   '.js': 'application/javascript',
+  '.mp3': 'audio/mpeg',
 };
 
 // เสิร์ฟไฟล์ client (index.html/style.css/client.js) + health check เดียวกัน

@@ -12,7 +12,9 @@ bomb-coop/
 └── client/
     ├── index.html
     ├── style.css
-    └── client.js
+    ├── client.js
+    └── assets/
+        └── bgm.mp3     # เพลงประกอบฉากเกม (เล่นวนตอน game_start)
 ```
 
 ## รันทดสอบในเครื่อง
@@ -64,12 +66,13 @@ npm start
 
 ## Design Decisions ที่ยืนยันแล้ว
 
-- **Strike System:** พลาดได้ 3 ครั้งก่อนระเบิด (ไม่ใช่ 1 ครั้งตายแบบ draft แรก)
+- **Strike System:** พลาดได้ **1 ครั้ง** ก่อนระเบิด (ตรงตาม draft แนวคิดแรก)
 - **Communication:** ไม่มีระบบเสียง/แชทในเกม ผู้เล่นคุยกันผ่านโปรแกรมนอก (Discord ฯลฯ)
 - **Network:** Online ผ่าน WebSocket, deploy บน Render.com free tier แทน LAN local
 - **Room Join:** ใช้รหัสห้อง 6 หลัก ผู้เล่นแชร์กันเอง
 - **Client:** Vanilla JS + DOM (ไม่ใช้ Canvas) เพื่อความง่ายในการ debug ช่วง prototype
 - **Sound:** synthesize เสียงเองด้วย Web Audio API (ไม่ใช้ไฟล์เสียงภายนอก) — คลิก/ตัดสาย/สลับสวิตช์/กดคีย์แพด, ถูก/ผิด, strike, นับถอยหลังช่วง 30 วิสุดท้าย (เร่งจังหวะที่ 10 วิ), defused/exploded. เสียงจะเล่นได้หลัง user gesture แรก (ข้อจำกัดของเบราว์เซอร์)
+- **Background Music:** `client/assets/bgm.mp3` เล่นวนลูปตอน `game_start`, หยุดตอน `game_over` หรือ connection หลุด (ตัดมาจากไฟล์ที่ผู้ใช้ให้มา ตัดเฉพาะแทร็กเสียง ไม่รวมวิดีโอ) ปรับ volume ได้ที่ `bgm.volume` ใน `client.js`
 - **Reconnect:** grace period 15 วิ ถ้าเกินเวลานี้ยังไม่กลับมา → จบรอบ กลับ lobby (ไม่ตัดสินเป็น exploded ทันที)
 
 ## สิ่งที่ยังไม่ทำ (ตาม Roadmap เดิม)
