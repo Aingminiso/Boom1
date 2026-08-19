@@ -1,4 +1,4 @@
-# 💣 BOMB CO-OP — Prototype v0.5
+# 💣 BOMB CO-OP — Prototype v0.6
 
 โครงสร้างโปรเจกต์:
 
@@ -10,9 +10,9 @@ bomb-coop/
 │   ├── bombGenerator.js   # สุ่ม Bomb (Wire, Button, Switch, Code, Light, Logic module — v0.4: Edition A/B/C ต่อ module | v0.5: เพิ่มสุ่ม "Model" ทั้งลูก (K-17/X-42/V-9) ส่งให้ A เท่านั้น)
 │   └── package.json
 └── client/
-    ├── index.html          # v0.5: คู่มือ B ปรับใหม่ทั้งหมด — cover เลือกรุ่นระเบิด (theme), TOC quick-jump, ช่องค้นหา, และเนื้อหา Quick Reference คู่กับฉบับเต็มทุก module
-    ├── style.css           # v0.5: ธีมคู่มือ 3 แบบตามรุ่น (K-17/X-42/V-9), สไตล์ cover/TOC/toolbar/model-plate
-    ├── client.js           # v0.4: badge "REV. A/B/C" บนแต่ละโมดูล | v0.5: ป้าย MODEL ฝั่ง A + logic เลือกรุ่น/สลับโหมด/ค้นหา/quick-jump ฝั่ง B
+    ├── index.html          # v0.5: คู่มือ B ปรับใหม่ทั้งหมด — cover เลือกรุ่นระเบิด (theme), TOC quick-jump, ช่องค้นหา, และเนื้อหา Quick Reference คู่กับฉบับเต็มทุก module | v0.6: เพิ่ม #danger-overlay / #flash-overlay สำหรับเอฟเฟกต์เต็มจอ
+    ├── style.css           # v0.5: ธีมคู่มือ 3 แบบตามรุ่น (K-17/X-42/V-9), สไตล์ cover/TOC/toolbar/model-plate | v0.6: screen transition, timer critical pulse/vignette, strike shake+flash, module correct/wrong feedback, manual theme crossfade, confetti ตอน defused, explosion flash+shake ตอนแพ้
+    ├── client.js           # v0.4: badge "REV. A/B/C" บนแต่ละโมดูล | v0.5: ป้าย MODEL ฝั่ง A + logic เลือกรุ่น/สลับโหมด/ค้นหา/quick-jump ฝั่ง B | v0.6: ผูก animation ทั้งหมดเข้ากับ event ที่มีอยู่แล้ว (ไม่มี message schema ใหม่)
     └── assets/
         └── bgm.mp3     # เพลงประกอบฉากเกม (เล่นวนตอน game_start)
 ```
@@ -66,6 +66,15 @@ npm start
 
 ## Design Decisions ที่ยืนยันแล้ว
 
+- **Animation / UI Polish (v0.6):** เพิ่ม feedback ให้ทุกเหตุการณ์หลักโดยไม่แตะ message schema เดิมเลย (ผูกกับ event ที่มีอยู่แล้ว: `strike`, `module_result`, `timer_tick`, `game_over`) —
+  - **Screen transition:** เปลี่ยนหน้า (lobby/waiting/game/end) แบบ fade + slide แทนการสลับ display ทันที
+  - **Timer:** จอเวลาพัลส์เมื่อเหลือ ≤30 วิ (`timer-warn`) และพัลส์แรง+เปลี่ยนสีแดงเมื่อ ≤10 วิ (`timer-critical`) พร้อม vignette แดงเต้นทั่วจอ (`#danger-overlay`)
+  - **Strike:** จอสั่น (screen shake) + แฟลชแดงเต็มจอ ตอนพลาด
+  - **Module feedback:** โมดูลที่ตอบถูกมีป้ายเขียวกระพริบ+ขยายเบา ๆ (`just-solved`), ตอบผิดมีอาการสั่น+ขอบแดง (`wrong-flash`) — ผูกกับ `data-module-id` แทนการเทียบข้อความหัวข้อแบบเดิม (แม่นยำกว่า)
+  - **Manual (ฝั่ง B):** เปลี่ยนธีมสีตามรุ่นระเบิดแบบ crossfade (ไม่กระพริบทันที), สลับ Full/Quick Reference มี fade สั้น ๆ, ปุ่มเลือกรุ่นมี pop animation ตอนกดเลือก
+  - **End screen:** ตอน Defused มี confetti ร่วง 70 ชิ้นทั่วจอ, ตอน Exploded มีแฟลชขาว+จอสั่น, ไอคอนและหัวข้อ end screen มี entrance animation
+  - ทั้งหมดนี้เป็น CSS animation/JS class toggle ล้วน ๆ ไม่มีการเปลี่ยนแปลง Network/Message Schema
+
 - **Bomb Model / Manual หลายรูปแบบ (v0.5):** ทุกรอบระเบิดจะสุ่ม **Model** ทั้งลูกจาก 3 รุ่น (`K-17` / `X-42` / `V-9`) ปั๊มอยู่บนป้าย MODEL ข้างป้าย SERIAL NO. ที่ A เห็นเท่านั้น — server ไม่ส่งค่านี้ให้ B เลย A ต้องบอก B ปากเปล่า แล้ว B กดเลือกรุ่นที่หน้า cover ของคู่มือ เพื่อปรับ**ธีมสี**ของทั้งเล่มให้ตรง (K-17 = โทนกระดาษคลาสสิก, X-42 = โทนเขียวรุ่นทดลอง, V-9 = โทนน้ำตาลรุ่นเก่า) เนื้อหากฎยังอ้างอิง Edition A/B/C ต่อ module เหมือนเดิม (Model กับ Edition เป็นข้อมูลคนละชั้นที่ A ต้องบอกทั้งคู่) — เพิ่มคู่มือยัง**สลับได้ 2 รูปแบบ**: **Full Manual** (คำอธิบายละเอียด ตาราง/สูตรครบ) กับ **⚡ Quick Reference** (สรุปกฎทุก edition เหลือบรรทัดเดียวต่อ edition สำหรับตอนรีบ) มีช่อง**ค้นหา**และแถบ **TOC quick-jump** ไปแต่ละ module ด้วย
 - **Rule Variety (v0.4):** ทุก module (wire/button/switch/code/light/logic) สุ่ม **Edition A/B/C** ต่อรอบ — แต่ละ Edition คือ "สูตร/กฎ" คนละชุด ไม่ใช่แค่ค่าพารามิเตอร์คนละค่า Player A เห็นป้าย `REV. X` บนโมดูล ต้องบอก B เพิ่มอีกชั้นหนึ่ง (เพิ่มความซับซ้อนของการสื่อสารตามคอนเซปต์) คู่มือของ B เป็น static และมีกฎครบทั้ง 3 Edition อยู่แล้ว ไม่ต้อง sync จาก server ต่อรอบ
 - **Strike System:** พลาดได้ **1 ครั้ง** ก่อนระเบิด (ตรงตาม draft แนวคิดแรก)
@@ -79,7 +88,8 @@ npm start
 
 ## สิ่งที่ยังไม่ทำ (ตาม Roadmap เดิม)
 
-- Animation, polish UI (v0.6) — ธีมคู่มือ v0.5 เป็นแค่เปลี่ยนสี ยังไม่มี animation/transition ตอนสลับรุ่นหรือสลับโหมด
+- v0.6 (Animation/UI polish) ทำในส่วน feedback หลักแล้วตามด้านบน — ที่ยังไม่ทำต่อ: animation ตอนตัดสายจริง ๆ (ตอนนี้แค่หายทันที ไม่มี snip animation), ripple ตอนกดปุ่มทั่วไป, และยังไม่ได้ปรับ mobile/touch layout responsive เป็นพิเศษ
+- v1.0 — เกมเวอร์ชันสมบูรณ์ (รอ v0.6 เสร็จเต็มก่อน)
 
 ## Known gaps (ยังไม่แก้)
 

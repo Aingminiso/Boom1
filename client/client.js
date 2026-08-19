@@ -112,8 +112,46 @@ const screens = {
 };
 
 function showScreen(name) {
-  Object.values(screens).forEach((s) => s.classList.remove('active'));
-  screens[name].classList.add('active');
+  Object.values(screens).forEach((s) => s.classList.remove('active', 'screen-in', 'shake'));
+  const target = screens[name];
+  target.classList.add('active');
+  // v0.6: fade/slide the new screen in — add the class one frame later so the
+  // browser registers the initial (opacity:0) state before transitioning.
+  requestAnimationFrame(() => requestAnimationFrame(() => target.classList.add('screen-in')));
+}
+
+// --- v0.6: shared full-screen effects (strike hit / explosion / danger vignette) ---
+function flashScreen(color) {
+  const flash = document.getElementById('flash-overlay');
+  if (!flash) return;
+  flash.style.background = color;
+  flash.classList.remove('flash-active');
+  void flash.offsetWidth; // restart animation
+  flash.classList.add('flash-active');
+}
+
+function shakeScreen(el) {
+  if (!el) return;
+  el.classList.remove('shake');
+  void el.offsetWidth; // restart animation
+  el.classList.add('shake');
+}
+
+function celebrateDefused() {
+  const colors = ['#ff6b6b', '#ffd166', '#06d6a0', '#4d96ff', '#f2f2f7'];
+  const count = 70;
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    const duration = 1.8 + Math.random() * 1.6;
+    piece.style.animationDuration = duration + 's';
+    piece.style.animationDelay = Math.random() * 0.5 + 's';
+    piece.style.borderRadius = Math.random() < 0.5 ? '50%' : '2px';
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), (duration + 1) * 1000);
+  }
 }
 
 function connect() {
@@ -179,6 +217,9 @@ function handleServerMessage(msg) {
       showScreen('game');
       lastAlarmSecond = null;
       playBgm();
+      document.getElementById('timer')?.classList.remove('timer-warn', 'timer-critical');
+      document.querySelector('.timer-plate')?.classList.remove('timer-critical-plate');
+      document.getElementById('danger-overlay')?.classList.remove('active');
       document.getElementById('hud-role-label').textContent =
         myRole === 'A' ? 'BOMB HANDLER (PLAYER A)' : 'EXPERT (PLAYER B)';
       document.getElementById('player-a-view').classList.toggle('active', myRole === 'A');
@@ -204,6 +245,8 @@ function handleServerMessage(msg) {
     case 'strike':
       updateStrikeDots(msg.strikes);
       SFX.strike();
+      flashScreen('#ff3b3f');
+      shakeScreen(screens.game);
       break;
 
     case 'module_result':
@@ -211,6 +254,7 @@ function handleServerMessage(msg) {
         if (msg.result === 'correct') {
           modulesState[msg.moduleId].solved = true;
           renderModules();
+          flashCorrect(msg.moduleId);
           SFX.correct();
         } else {
           const mod = modulesState[msg.moduleId];
@@ -229,6 +273,7 @@ function handleServerMessage(msg) {
     case 'game_over':
       showScreen('end');
       stopBgm();
+      document.getElementById('danger-overlay')?.classList.remove('active');
       const title = document.getElementById('end-title');
       const detail = document.getElementById('end-detail');
       const icon = document.getElementById('end-icon');
@@ -238,6 +283,7 @@ function handleServerMessage(msg) {
         title.style.color = '#06d6a0';
         detail.textContent = `เหลือเวลา ${formatTime(msg.timeRemaining)}`;
         SFX.defused();
+        celebrateDefused();
       } else {
         icon.innerHTML = EXPLOSION_SVG;
         title.textContent = 'BOOM! GAME OVER';
@@ -245,6 +291,8 @@ function handleServerMessage(msg) {
         detail.textContent =
           msg.reason === 'timeout' ? 'หมดเวลา' : msg.reason === 'max_strikes' ? `พลาดครบ ${msg.strikes} ครั้ง` : 'เกมจบกะทันหัน';
         SFX.explode();
+        flashScreen('#fff4d6');
+        shakeScreen(screens.end);
       }
       break;
 
@@ -259,7 +307,16 @@ function updateStrikeDots(strikes) {
 }
 
 function updateTimerDisplay(seconds) {
-  document.getElementById('timer').textContent = formatTime(seconds);
+  const timerEl = document.getElementById('timer');
+  timerEl.textContent = formatTime(seconds);
+  const isWarn = seconds <= 30 && seconds > 10;
+  const isCritical = seconds <= 10 && seconds >= 0;
+  timerEl.classList.toggle('timer-warn', isWarn);
+  timerEl.classList.toggle('timer-critical', isCritical);
+  const plateEl = document.querySelector('.timer-plate');
+  if (plateEl) plateEl.classList.toggle('timer-critical-plate', isCritical);
+  const danger = document.getElementById('danger-overlay');
+  if (danger) danger.classList.toggle('active', isCritical);
 }
 function formatTime(sec) {
   const m = String(Math.floor(sec / 60)).padStart(2, '0');
@@ -279,6 +336,7 @@ function renderModules() {
   Object.values(modulesState).forEach((mod) => {
     const box = document.createElement('div');
     box.className = 'module-box' + (mod.solved ? ' solved' : '');
+    box.dataset.moduleId = mod.id; // v0.6: stable hook for correct/wrong flash animations
     const edBadge = editionBadgeHtml(mod.visibleState && mod.visibleState.edition);
 
     if (mod.type === 'wire') {
@@ -507,14 +565,19 @@ function sendModuleAction(moduleId, action) {
 }
 
 function flashWrong(moduleId) {
-  const boxes = document.querySelectorAll('.module-box');
-  boxes.forEach((b) => {
-    const label = b.querySelector('h3')?.textContent.toLowerCase() || '';
-    if (label.includes(moduleId)) {
-      b.style.boxShadow = '0 0 0 2px #ff5a5f';
-      setTimeout(() => (b.style.boxShadow = ''), 300);
-    }
-  });
+  const box = document.querySelector(`.module-box[data-module-id="${moduleId}"]`);
+  if (!box) return;
+  box.classList.remove('wrong-flash');
+  void box.offsetWidth; // restart animation if triggered again quickly
+  box.classList.add('wrong-flash');
+  setTimeout(() => box.classList.remove('wrong-flash'), 450);
+}
+
+function flashCorrect(moduleId) {
+  const box = document.querySelector(`.module-box[data-module-id="${moduleId}"]`);
+  if (!box) return;
+  box.classList.add('just-solved');
+  setTimeout(() => box.classList.remove('just-solved'), 600);
 }
 
 // --- Manual UI (v0.5): เลือกรุ่นระเบิด (theme), Quick Reference toggle, ค้นหา, quick-jump TOC ---
@@ -539,9 +602,14 @@ if (manualModeToggle) {
   manualModeToggle.onclick = () => {
     SFX.click();
     const container = document.getElementById('manual-container');
-    const isQuick = container.classList.toggle('mode-quick');
-    container.classList.toggle('mode-full', !isQuick);
-    manualModeToggle.textContent = isQuick ? '📖 สลับเป็น Full Manual' : '⚡ สลับเป็น Quick Reference';
+    // v0.6: brief fade-out/in while the content swaps, instead of an instant jump
+    container.classList.add('fading');
+    setTimeout(() => {
+      const isQuick = container.classList.toggle('mode-quick');
+      container.classList.toggle('mode-full', !isQuick);
+      manualModeToggle.textContent = isQuick ? '📖 สลับเป็น Full Manual' : '⚡ สลับเป็น Quick Reference';
+      container.classList.remove('fading');
+    }, 150);
   };
 }
 
