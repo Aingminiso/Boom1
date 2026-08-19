@@ -178,11 +178,14 @@ input:focus { outline: none; border-color: #ffd166; }
 }
 .module-body { padding: 16px; }
 
-/* Edition badge (v0.4) — ป้ายบ่งชี้สูตรที่ A ต้องบอก B */
+/* Edition badge (v0.4) — ป้ายบ่งชี้สูตรที่ A ต้องบอก B
+   หมายเหตุ: ห้ามใช้ top ติดลบ (โผล่พ้นกรอบ header) เพราะ .module-box มี overflow:hidden
+   (ไว้บังคับมุมโค้ง) จะโดนตัดครึ่งบน — ให้วางกึ่งกลางแนวตั้งของ header แทน จะได้ไม่โดน clip */
 .edition-badge {
   position: absolute;
-  top: -8px;
+  top: 50%;
   right: 10px;
+  transform: translateY(-50%);
   font-family: 'Courier New', monospace;
   font-size: 10px;
   font-weight: 800;
@@ -190,6 +193,7 @@ input:focus { outline: none; border-color: #ffd166; }
   padding: 2px 7px;
   border-radius: 4px;
   color: #1a1a1a;
+  white-space: nowrap;
   box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.4);
 }
 .edition-A { background: #ffd166; }
