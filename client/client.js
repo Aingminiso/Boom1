@@ -265,16 +265,23 @@ function formatTime(sec) {
   return `${m}:${s}`;
 }
 
+// ป้าย Edition ที่ปั๊มอยู่บนโมดูล — Player A ต้องบอก B ว่าเห็น edition อะไร (คู่มือ B มีกฎครบทุก edition)
+function editionBadgeHtml(edition) {
+  if (!edition) return '';
+  return `<span class="edition-badge edition-${edition}">REV. ${edition}</span>`;
+}
+
 function renderModules() {
   const container = document.getElementById('modules-container');
   container.innerHTML = '';
   Object.values(modulesState).forEach((mod) => {
     const box = document.createElement('div');
     box.className = 'module-box' + (mod.solved ? ' solved' : '');
+    const edBadge = editionBadgeHtml(mod.visibleState && mod.visibleState.edition);
 
     if (mod.type === 'wire') {
       box.innerHTML = `
-        <div class="module-header"><span class="rivet"></span><h3>Wire Module</h3><span class="rivet"></span></div>
+        <div class="module-header"><span class="rivet"></span><h3>Wire Module</h3>${edBadge}<span class="rivet"></span></div>
         <div class="module-body"><div class="wire-list"></div></div>`;
       const list = box.querySelector('.wire-list');
       mod.visibleState.wires.forEach((color, index) => {
@@ -295,7 +302,7 @@ function renderModules() {
 
     if (mod.type === 'button') {
       box.innerHTML = `
-        <div class="module-header"><span class="rivet"></span><h3>Button Module</h3><span class="rivet"></span></div>
+        <div class="module-header"><span class="rivet"></span><h3>Button Module</h3>${edBadge}<span class="rivet"></span></div>
         <div class="module-body"></div>`;
       const body = box.querySelector('.module-body');
       const btn = document.createElement('button');
@@ -330,7 +337,7 @@ function renderModules() {
 
     if (mod.type === 'switch') {
       box.innerHTML = `
-        <div class="module-header"><span class="rivet"></span><h3>Switch Module</h3><span class="rivet"></span></div>
+        <div class="module-header"><span class="rivet"></span><h3>Switch Module</h3>${edBadge}<span class="rivet"></span></div>
         <div class="module-body"><div class="switch-row"></div></div>`;
       const row = box.querySelector('.switch-row');
       // เก็บ state ตำแหน่งปัจจุบันไว้ที่ moduleState เอง (client-local จนกว่าจะกดยืนยัน)
@@ -370,7 +377,7 @@ function renderModules() {
 
     if (mod.type === 'code') {
       box.innerHTML = `
-        <div class="module-header"><span class="rivet"></span><h3>Code Module</h3><span class="rivet"></span></div>
+        <div class="module-header"><span class="rivet"></span><h3>Code Module</h3>${edBadge}<span class="rivet"></span></div>
         <div class="module-body"></div>`;
       const body = box.querySelector('.module-body');
       if (!mod._input) mod._input = '';
@@ -412,6 +419,80 @@ function renderModules() {
         pad.appendChild(clearKey);
         pad.appendChild(enterKey);
         body.appendChild(pad);
+      }
+    }
+
+    if (mod.type === 'light') {
+      box.innerHTML = `
+        <div class="module-header"><span class="rivet"></span><h3>Light Module</h3>${edBadge}<span class="rivet"></span></div>
+        <div class="module-body"><div class="light-row"></div></div>`;
+      const row = box.querySelector('.light-row');
+      if (!mod._states) {
+        mod._states = mod.visibleState.lights.map((l) => l.initialState);
+      }
+      mod.visibleState.lights.forEach((lt, index) => {
+        const unit = document.createElement('div');
+        unit.className = 'light-unit';
+        const lamp = document.createElement('div');
+        const isOn = mod._states[index] === 'on';
+        lamp.className = `lamp lamp-${lt.color}` + (isOn ? ' lit' : '') + ` blink-${lt.blinkSpeed}`;
+        const caption = document.createElement('span');
+        caption.className = 'light-caption';
+        caption.textContent = lt.blinkSpeed === 'slow' ? 'ช้า' : 'เร็ว';
+        if (!mod.solved) {
+          lamp.onclick = () => {
+            SFX.toggle();
+            mod._states[index] = isOn ? 'off' : 'on';
+            renderModules();
+          };
+        }
+        unit.appendChild(lamp);
+        unit.appendChild(caption);
+        row.appendChild(unit);
+      });
+      if (!mod.solved) {
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = 'switch-confirm';
+        confirmBtn.textContent = 'ยืนยันสถานะไฟ';
+        confirmBtn.onclick = () => {
+          SFX.click();
+          sendModuleAction(mod.id, { type: 'confirm_lights', states: mod._states });
+        };
+        box.querySelector('.module-body').appendChild(confirmBtn);
+      }
+    }
+
+    if (mod.type === 'logic') {
+      box.innerHTML = `
+        <div class="module-header"><span class="rivet"></span><h3>Logic Module</h3>${edBadge}<span class="rivet"></span></div>
+        <div class="module-body"></div>`;
+      const body = box.querySelector('.module-body');
+      const checks = document.createElement('div');
+      checks.className = 'logic-checks';
+      checks.innerHTML = `
+        <div class="logic-badge ${mod.visibleState.checkA ? 'is-true' : 'is-false'}">CHECK A: ${mod.visibleState.checkA ? 'TRUE' : 'FALSE'}</div>
+        <div class="logic-badge ${mod.visibleState.checkB ? 'is-true' : 'is-false'}">CHECK B: ${mod.visibleState.checkB ? 'TRUE' : 'FALSE'}</div>`;
+      body.appendChild(checks);
+      if (!mod.solved) {
+        const btnRow = document.createElement('div');
+        btnRow.className = 'logic-btn-row';
+        const yesBtn = document.createElement('button');
+        yesBtn.className = 'logic-btn logic-yes';
+        yesBtn.textContent = 'YES';
+        yesBtn.onclick = () => {
+          SFX.click();
+          sendModuleAction(mod.id, { type: 'submit_logic', choice: 'yes' });
+        };
+        const noBtn = document.createElement('button');
+        noBtn.className = 'logic-btn logic-no';
+        noBtn.textContent = 'NO';
+        noBtn.onclick = () => {
+          SFX.click();
+          sendModuleAction(mod.id, { type: 'submit_logic', choice: 'no' });
+        };
+        btnRow.appendChild(yesBtn);
+        btnRow.appendChild(noBtn);
+        body.appendChild(btnRow);
       }
     }
 

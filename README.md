@@ -1,4 +1,4 @@
-# 💣 BOMB CO-OP — Prototype v0.2
+# 💣 BOMB CO-OP — Prototype v0.4
 
 โครงสร้างโปรเจกต์:
 
@@ -7,12 +7,12 @@ bomb-coop/
 ├── server/
 │   ├── server.js          # WebSocket server + serve client static files
 │   ├── gameState.js       # Room / Timer / Strike / broadcast logic
-│   ├── bombGenerator.js   # สุ่ม Bomb (Wire, Button, Switch, Code module — v0.2)
+│   ├── bombGenerator.js   # สุ่ม Bomb (Wire, Button, Switch, Code, Light, Logic module — v0.4: แต่ละ module สุ่ม "Edition" A/B/C สลับสูตรกฎ ไม่ใช่แค่ค่าพารามิเตอร์)
 │   └── package.json
 └── client/
-    ├── index.html
+    ├── index.html          # คู่มือ B ขยายให้มีกฎครบทั้ง 3 Edition ต่อ module
     ├── style.css
-    ├── client.js
+    ├── client.js           # เพิ่ม badge "REV. A/B/C" บนแต่ละโมดูลในมุมมอง A
     └── assets/
         └── bgm.mp3     # เพลงประกอบฉากเกม (เล่นวนตอน game_start)
 ```
@@ -49,7 +49,7 @@ npm start
 | `create_room` | `{}` | A หรือ B (คนแรก) |
 | `join_room` | `{ code }` | คนที่สอง |
 | `ready` | `{}` | ทั้งคู่ |
-| `module_action` | `{ moduleId, action }` | เฉพาะ A — `action` แตกต่างกันตาม module type: `{type:'cut_wire', index}` (wire), `{type:'tap'}` \| `{type:'hold_release', heldSeconds, releaseDigit}` (button), `{type:'confirm_switches', positions:[...]}` (switch), `{type:'submit_code', code:'0000'}` (code) |
+| `module_action` | `{ moduleId, action }` | เฉพาะ A — `action` แตกต่างกันตาม module type: `{type:'cut_wire', index}` (wire), `{type:'tap'}` \| `{type:'hold_release', heldSeconds, releaseDigit}` (button), `{type:'confirm_switches', positions:[...]}` (switch), `{type:'submit_code', code:'0000'}` (code), `{type:'confirm_lights', states:[...]}` (light), `{type:'submit_logic', choice:'yes'\|'no'}` (logic) |
 
 ### Server → Client
 | type | payload | หมายเหตุ |
@@ -57,7 +57,7 @@ npm start
 | `room_created` / `joined_room` | `{ code, role }` | ยืนยัน role ที่ได้รับ |
 | `error` | `{ message }` | เช่น ห้องเต็ม/ไม่พบห้อง |
 | `ready_update` | `{ readyFlags }` | |
-| `game_start` | `{ modules }` (เฉพาะ A) | B ไม่ได้รับ modules เลย |
+| `game_start` | `{ modules }` (เฉพาะ A) | B ไม่ได้รับ modules เลย — แต่ละ module ใน `visibleState` มี field `edition: 'A'\|'B'\|'C'` เพิ่มมาตั้งแต่ v0.4 (ตัวบ่งชี้ว่ารอบนี้ module นี้ใช้สูตรไหน A ต้องอ่านค่านี้บอก B) |
 | `timer_tick` | `{ timeRemaining }` | ทุก 1 วิ |
 | `strike` | `{ strikes, maxStrikes }` | |
 | `module_result` | `{ moduleId, result }` | `correct` \| `wrong` |
@@ -66,6 +66,7 @@ npm start
 
 ## Design Decisions ที่ยืนยันแล้ว
 
+- **Rule Variety (v0.4):** ทุก module (wire/button/switch/code/light/logic) สุ่ม **Edition A/B/C** ต่อรอบ — แต่ละ Edition คือ "สูตร/กฎ" คนละชุด ไม่ใช่แค่ค่าพารามิเตอร์คนละค่า Player A เห็นป้าย `REV. X` บนโมดูล ต้องบอก B เพิ่มอีกชั้นหนึ่ง (เพิ่มความซับซ้อนของการสื่อสารตามคอนเซปต์) คู่มือของ B เป็น static และมีกฎครบทั้ง 3 Edition อยู่แล้ว ไม่ต้อง sync จาก server ต่อรอบ
 - **Strike System:** พลาดได้ **1 ครั้ง** ก่อนระเบิด (ตรงตาม draft แนวคิดแรก)
 - **Communication:** ไม่มีระบบเสียง/แชทในเกม ผู้เล่นคุยกันผ่านโปรแกรมนอก (Discord ฯลฯ)
 - **Network:** Online ผ่าน WebSocket, deploy บน Render.com free tier แทน LAN local
@@ -77,9 +78,7 @@ npm start
 
 ## สิ่งที่ยังไม่ทำ (ตาม Roadmap เดิม)
 
-- Light / Logic module (v0.3)
-- ระบบสุ่มความหลากหลายของกฎ ไม่ใช่แค่ค่า (v0.4)
-- คู่มือหลายรูปแบบ/หลายเวอร์ชันระเบิด (v0.5)
+- คู่มือหลายรูปแบบ/หลายเวอร์ชันระเบิด (v0.5) — v0.4 ทำให้ "กฎ" สุ่มแล้ว (Edition A/B/C) แต่ตัวรูปเล่ม/skin คู่มือยังเป็นแบบเดียว
 - Animation, polish UI (v0.6)
 
 ## Known gaps (ยังไม่แก้)

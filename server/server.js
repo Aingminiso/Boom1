@@ -158,6 +158,14 @@ function evaluateAction(mod, action) {
   if (mod.type === 'code' && action.type === 'submit_code') {
     return typeof action.code === 'string' && action.code === mod._answer.code;
   }
+  if (mod.type === 'light' && action.type === 'confirm_lights') {
+    const expected = mod._answer.states;
+    if (!Array.isArray(action.states) || action.states.length !== expected.length) return false;
+    return expected.every((state, i) => action.states[i] === state);
+  }
+  if (mod.type === 'logic' && action.type === 'submit_logic') {
+    return action.choice === mod._answer.choice;
+  }
   return false;
 }
 
