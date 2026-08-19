@@ -88,7 +88,7 @@ npm start
 
 ## สิ่งที่ยังไม่ทำ (ตาม Roadmap เดิม)
 
-- v0.6 (Animation/UI polish) ทำในส่วน feedback หลักแล้วตามด้านบน — ที่ยังไม่ทำต่อ: animation ตอนตัดสายจริง ๆ (ตอนนี้แค่หายทันที ไม่มี snip animation), ripple ตอนกดปุ่มทั่วไป, และยังไม่ได้ปรับ mobile/touch layout responsive เป็นพิเศษ
+- v0.6 (Animation/UI polish) ทำในส่วน feedback หลักแล้วตามด้านบน — **เพิ่ม snip animation ตอนตัดสาย (v0.6.1):** wire แต่ละเส้นแยกเรนเดอร์เป็น 2 ท่อน (`.wire-strand-left/right`) บนพื้นหลัง cavity สีเข้ม คลิกแล้วเล่นทันที (ไม่รอ server ตอบ) — ท่อนซ้าย/ขวาสะบัดแยกออกจากกันพร้อม spark กระพริบตรงจุดตัด (คลาส `snipping` ชั่วคราว 0.36s) แล้วค้างสภาพ "ปลายสายห้อยแยกออก" ถาวรเมื่อ module แก้ถูก (คลาส `cut`) — กันคลิกซ้ำระหว่างเล่น animation ด้วย — ที่ยังไม่ทำต่อ: ripple ตอนกดปุ่มทั่วไป, และยังไม่ได้ปรับ mobile/touch layout responsive เป็นพิเศษ
 - v1.0 — เกมเวอร์ชันสมบูรณ์ (รอ v0.6 เสร็จเต็มก่อน)
 
 ## Known gaps (ยังไม่แก้)

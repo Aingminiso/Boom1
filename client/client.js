@@ -356,10 +356,18 @@ function renderModules() {
         const wireEl = document.createElement('div');
         wireEl.className = `wire wire-${color}`;
         wireEl.title = `สาย ${index + 1} (${color})`;
+        wireEl.innerHTML =
+          '<span class="wire-strand wire-strand-left"></span>' +
+          '<span class="wire-strand wire-strand-right"></span>' +
+          '<span class="snip-spark"></span>';
         if (!mod.solved) {
           wireEl.onclick = () => {
+            // v0.6.1: กันคลิกซ้ำระหว่างเล่น animation ตัดสาย + เล่น snip ทันทีโดยไม่รอ server ตอบกลับ
+            if (wireEl.classList.contains('snipping') || wireEl.classList.contains('cut')) return;
+            wireEl.classList.add('snipping');
             SFX.cut();
             sendModuleAction(mod.id, { type: 'cut_wire', index });
+            setTimeout(() => wireEl.classList.remove('snipping'), 380);
           };
         } else {
           wireEl.classList.add('cut');
